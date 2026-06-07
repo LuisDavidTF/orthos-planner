@@ -57,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="header-toolbar">
       {/* Brand logo */}
       <div className="logo">
-        📐 Studio<span>2D</span>
+        📐 Zero<span>Plan</span>
       </div>
 
       {/* Center: Toolbar controls */}

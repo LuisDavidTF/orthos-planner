@@ -1,4 +1,7 @@
-# 📐 Studio2D — Planificador de Habitaciones y Espacios 2D Interactivos
+# ZeroPlan 📐
+
+> **Planificador de Habitaciones 2D Online Gratis** | **Diseño de Interiores 2D Gratis y Sin Registro**
+> Un simulador de cuarto online premium y privado que procesa todo localmente en tu navegador.
 
 Una aplicación web interactiva y premium en 2D diseñada para ayudar a los usuarios a planificar, distribuir y organizar muebles en habitaciones con medidas reales. Construida sobre **React**, **TypeScript**, **Vite** y gráficos vectoriales **SVG** de alta definición.
 

@@ -1,5 +1,5 @@
 {
-  "name": "studio2d-planner",
+  "name": "zeroplan-planner",
   "version": "1.0.0",
   "description": "Planificador de habitaciones y simulador de interiores 2D interactivo, 100% procesado en local.",
   "type": "module",
