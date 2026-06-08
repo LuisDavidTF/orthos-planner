@@ -24,6 +24,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Link main CSS stylesheets (shares global configurations & adds landing styles) -->
+    <link rel="stylesheet" href="/src/index.css" />
+
     <!-- JSON-LD Structured Data Schema -->
     <script type="application/ld+json">
     {
@@ -43,8 +46,256 @@
     }
     </script>
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body class="landing-page">
+
+    <!-- HEADER TOOLBAR -->
+    <header class="landing-header">
+      <div class="logo" style="background: none; -webkit-text-fill-color: initial; color: #fff;">
+        📐 Ortho<span>s</span>
+      </div>
+      <div class="toolbar-group">
+        <a href="https://markdify.tech/" target="_blank" class="btn btn-secondary" style="font-size: 0.82rem; padding: 8px 12px; text-decoration: none;">
+          Markdify Tools
+        </a>
+        <a href="editor.html" class="btn btn-primary" style="font-size: 0.85rem; padding: 8px 16px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+          Abrir Editor ➜
+        </a>
+      </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="landing-hero">
+      <div class="hero-badge">Procesamiento local seguro (RAM)</div>
+      <h1>Diseña planos de habitaciones 2D con medidas reales y privacidad absoluta</h1>
+      <p>
+        Orthos es un planificador interactivo gratuito que te permite remodelar y organizar tus espacios directamente en el navegador. Dibuja paredes asimétricas, añade muebles a escala real y exporta tus planos sin registrarte.
+      </p>
+      <div class="hero-ctas">
+        <a href="editor.html" class="btn btn-primary" style="text-decoration: none; font-size: 1rem; padding: 12px 24px;">
+          Empezar a Diseñar Gratis
+        </a>
+        <a href="#how-it-works" class="btn btn-secondary" style="text-decoration: none; font-size: 1rem; padding: 12px 24px;">
+          Ver Cómo Funciona
+        </a>
+      </div>
+    </section>
+
+    <!-- PREMIUM BLUEPRINT SVG PREVIEW MOCKUP -->
+    <div class="preview-mockup-wrapper">
+      <svg class="preview-mockup-image" viewBox="0 0 800 450" xmlns="http://www.w3.org/2000/svg" style="background: #0d1220; display: block;">
+        <!-- Grid overlay -->
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1.5"/>
+            <path d="M 8 0 L 0 0 0 8" fill="none" stroke="rgba(255,255,255,0.01)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <!-- Room outline -->
+        <polygon points="150,80 650,80 650,300 400,300 400,380 150,380" fill="#0c0f18" stroke="#6366f1" stroke-width="4" stroke-linejoin="round" />
+        
+        <!-- Measurement tags along walls -->
+        <text x="400" y="65" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle">500 cm</text>
+        <text x="670" y="190" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle" transform="rotate(90, 670, 190)">220 cm</text>
+        <text x="525" y="320" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle">250 cm</text>
+        <text x="420" y="340" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle" transform="rotate(90, 420, 340)">80 cm</text>
+        <text x="275" y="400" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle">250 cm</text>
+        <text x="130" y="230" fill="#a1a1aa" font-family="'Outfit', sans-serif" font-size="12" font-weight="600" text-anchor="middle" transform="rotate(-90, 130, 230)">300 cm</text>
+
+        <!-- Furniture items styled CAD-like -->
+        <!-- Bed (Cama) -->
+        <g transform="translate(180, 100) rotate(0)">
+          <rect width="140" height="190" rx="8" fill="rgba(99, 102, 241, 0.05)" stroke="#6366f1" stroke-width="2.5" />
+          <!-- Pillow (Almohada) -->
+          <rect x="15" y="15" width="110" height="35" rx="4" fill="none" stroke="#6366f1" stroke-width="1.5" />
+          <!-- Blanket fold -->
+          <path d="M 0 70 L 140 70 M 0 90 L 140 90" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="3 3" />
+          <text x="70" y="105" fill="#f3f4f6" font-family="'Inter', sans-serif" font-size="11" font-weight="500" text-anchor="middle">Cama Queen</text>
+        </g>
+
+        <!-- Desk and Chair -->
+        <g transform="translate(480, 100)">
+          <rect width="120" height="70" rx="4" fill="rgba(245, 158, 11, 0.05)" stroke="#f59e0b" stroke-width="2" />
+          <line x1="20" y1="70" x2="100" y2="70" stroke="#f59e0b" stroke-width="1" />
+          <text x="60" y="40" fill="#f3f4f6" font-family="'Inter', sans-serif" font-size="10" font-weight="500" text-anchor="middle">Escritorio</text>
+        </g>
+        <g transform="translate(520, 190)">
+          <rect width="40" height="40" rx="6" fill="rgba(245, 158, 11, 0.05)" stroke="#f59e0b" stroke-width="2" />
+          <path d="M 5 35 A 15 15 0 0 1 35 35" fill="none" stroke="#f59e0b" stroke-width="1.5" />
+        </g>
+
+        <!-- Wardrobe (Ropero) -->
+        <g transform="translate(180, 310)">
+          <rect width="160" height="55" rx="4" fill="rgba(139, 92, 246, 0.05)" stroke="#8b5cf6" stroke-width="2" />
+          <!-- Closet rod lines -->
+          <line x1="10" y1="27" x2="150" y2="27" stroke="#8b5cf6" stroke-width="1.5" />
+          <line x1="20" y1="10" x2="20" y2="45" stroke="#8b5cf6" stroke-width="1" />
+          <line x1="140" y1="10" x2="140" y2="45" stroke="#8b5cf6" stroke-width="1" />
+          <text x="80" y="45" fill="#f3f4f6" font-family="'Inter', sans-serif" font-size="10" font-weight="500" text-anchor="middle">Ropero</text>
+        </g>
+
+        <!-- Door (Puerta) -->
+        <g transform="translate(480, 296)">
+          <line x1="0" y1="4" x2="60" y2="4" stroke="#ef4444" stroke-width="3" />
+          <!-- Swing arc -->
+          <path d="M 0 4 A 60 60 0 0 1 -60 -56" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 2" />
+          <line x1="0" y1="4" x2="-60" y2="-56" stroke="#ef4444" stroke-width="1.5" />
+        </g>
+
+        <!-- Window (Ventana) -->
+        <g transform="translate(320, 75)">
+          <rect width="100" height="10" fill="#0d1220" stroke="#ec4899" stroke-width="2" />
+          <line x1="0" y1="5" x2="100" y2="5" stroke="#ec4899" stroke-width="1" />
+          <line x1="50" y1="0" x2="50" y2="10" stroke="#ec4899" stroke-width="1" />
+        </g>
+
+        <!-- Interactive guides/distances -->
+        <line x1="320" y1="195" x2="480" y2="195" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5 5" />
+        <rect x="375" y="183" width="50" height="20" rx="4" fill="#0d1220" stroke="#38bdf8" stroke-width="1" />
+        <text x="400" y="197" fill="#38bdf8" font-family="'Outfit', sans-serif" font-size="10" font-weight="700" text-anchor="middle">160 cm</text>
+
+        <!-- Active cursor node representing CAD drag editing -->
+        <g transform="translate(400, 300)">
+          <circle r="12" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="2 2" />
+          <circle r="6.5" fill="#38bdf8" stroke="#0a0f1e" stroke-width="2" />
+        </g>
+      </svg>
+    </div>
+
+    <!-- HOW IT WORKS SECTION -->
+    <section class="landing-section" id="how-it-works" style="border-top: 1px solid var(--border-thin);">
+      <div class="section-header">
+        <h2>¿Cómo funciona Orthos?</h2>
+        <p>Diseña tu habitación ideal en tres simples pasos sin programas pesados de arquitectura.</p>
+      </div>
+      
+      <div class="features-grid-landing">
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">1</div>
+          <h3>Traza las paredes</h3>
+          <p>Elige un preajuste básico o introduce el largo de cada pared. Arrastra las esquinas en el lienzo para crear formas asimétricas o añade esquinas haciendo clic en los botones de suma.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">2</div>
+          <h3>Coloca y escala muebles</h3>
+          <p>Elige camas, armarios, escritorios o ventanas de la librería. Arrástralos al cuarto y define sus medidas reales en el inspector derecho. Las guías te dirán la distancia exacta a las paredes.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">3</div>
+          <h3>Exporta tu plano</h3>
+          <p>Descarga una imagen PNG de alta calidad del plano para mostrársela a tus familiares, o un archivo vectorial SVG escalable para planos CAD profesionales.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES LISTING -->
+    <section class="landing-section" style="background: rgba(11, 15, 25, 0.4); border-top: 1px solid var(--border-thin); border-bottom: 1px solid var(--border-thin);">
+      <div class="section-header">
+        <h2>Características Premium del Simulador</h2>
+        <p>Una suite local de diseño rápido con las mejores herramientas del mercado.</p>
+      </div>
+
+      <div class="features-grid-landing">
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">📐</div>
+          <h3>Paredes Asimétricas</h3>
+          <p>Soporte nativo para esquinas no rectas. Arrastra y deforma perfiles libremente para planos realistas de casas antiguas o asimétricas.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">🛡️</div>
+          <h3>Privacidad Local (W3C)</h3>
+          <p>Ningún archivo o medida se envía a servidores. El simulador procesa todo en la memoria de tu navegador (RAM) para resguardar tus datos.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">🛋️</div>
+          <h3>Librería CAD Detallada</h3>
+          <p>Muebles dibujados con especificaciones técnicas reales: arcos de swing de puertas, paneles de ventanas y divisiones de armarios.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">🔄</div>
+          <h3>Historial Completo</h3>
+          <p>Viaja en el tiempo. Deshaz y rehaz tus acciones de forma ilimitada usando atajos rápidos de teclado (Ctrl + Z y Ctrl + Y).</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">📏</div>
+          <h3>Unidades Dinámicas</h3>
+          <p>Cambia entre sistema métrico e imperial de forma instantánea. Conversión matemática precisa de centímetros, metros, pulgadas y pies.</p>
+        </div>
+        <div class="feature-card-landing">
+          <div class="feature-card-icon">💾</div>
+          <h3>Exportación Local</h3>
+          <p>Descarga copias de tus proyectos en formato JSON local, o planos listos para visualización comercial en PNG y SVG.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTICLES / SEO KNOWLEDGE HUBS -->
+    <section class="landing-section">
+      <div class="section-header">
+        <h2>Consejos de Diseño de Interiores y Guías Técnicas</h2>
+        <p>Aprende a estructurar tus planos, organizar espacios pequeños y proteger la privacidad de tus datos de forma local.</p>
+      </div>
+
+      <div class="articles-grid-landing">
+        <!-- Article 1 -->
+        <article class="article-card-landing" style="cursor: default;">
+          <div class="article-card-content">
+            <span class="article-category">Diseño y Distribución</span>
+            <h3>Guía de Diseño: Cómo Planificar una Habitación Pequeña en 2D</h3>
+            <p>
+              Organizar un cuarto pequeño requiere precisión milimétrica. Aprende a distribuir muebles esenciales como la cama y el escritorio respetando las zonas de paso recomendadas (mínimo 60 cm de espacio libre) y a configurar la orientación del giro de la puerta para no chocar con armarios.
+            </p>
+            <div class="article-readmore">Concepto de Escala Real</div>
+          </div>
+        </article>
+
+        <!-- Article 2 -->
+        <article class="article-card-landing" style="cursor: default;">
+          <div class="article-card-content">
+            <span class="article-category">Trazado Técnico</span>
+            <h3>Cómo Medir y Trazar Paredes Asimétricas o en L en un Plano</h3>
+            <p>
+              Las casas reales rara vez tienen esquinas perfectas de 90 grados. Descubre cómo calcular y trazar perfiles poligonales asimétricos usando vértices absolutos en centímetros y cómo propagar las longitudes a lo largo de las pendientes normales para evitar distorsiones al redimensionar un muro.
+            </p>
+            <div class="article-readmore">Geometría Vectorial CAD</div>
+          </div>
+        </article>
+
+        <!-- Article 3 -->
+        <article class="article-card-landing" style="cursor: default;">
+          <div class="article-card-content">
+            <span class="article-category">Seguridad Web</span>
+            <h3>La Importancia de las Herramientas Web Client-Side para la Privacidad</h3>
+            <p>
+              Subir planos o bosquejos de tu casa a servidores web externos expone información física confidencial. Analizamos por qué el uso de APIs locales de HTML5 y FileReader resguarda la privacidad del usuario procesando y compilando planos vectoriales en local sin salir del cliente.
+            </p>
+            <div class="article-readmore">Filosofía Zero-Server</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- CALL TO ACTION BANNER -->
+    <section class="cta-banner-landing">
+      <h2>¿Listo para dar vida a tus espacios?</h2>
+      <p>Abre el editor interactivo Orthos Studio ahora mismo. Es totalmente gratis, no requiere registrarse y funciona en cualquier dispositivo.</p>
+      <a href="editor.html" class="btn btn-primary" style="text-decoration: none; font-size: 1.1rem; padding: 14px 28px; box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);">
+        Abrir Orthos Studio 📐
+      </a>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+      <p>&copy; 2026 Orthos &mdash; Diseñador de planos locales de alta fidelidad bajo licencia MIT.</p>
+      <div style="margin-top: 12px;">
+        <a href="https://github.com/LuisDavidTF/orthos-planner" target="_blank" rel="noopener">GitHub Repo</a>
+        <span class="sep">&middot;</span>
+        <a href="https://markdify.tech/" target="_blank" rel="noopener">Markdify.tech</a>
+        <span class="sep">&middot;</span>
+        <a href="editor.html">Abrir Planificador</a>
+      </div>
+    </footer>
+
   </body>
 </html>

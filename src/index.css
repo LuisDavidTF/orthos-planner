@@ -864,3 +864,347 @@ input[type="number"] {
 .switch-container input:focus + .switch-slider {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
+
+/* ==========================================
+   LANDING PAGE STYLES (ORTHOS)
+   ========================================== */
+.landing-page {
+  background: radial-gradient(circle at 50% 30%, #151c33 0%, var(--bg-base) 80%);
+  overflow-y: auto;
+  height: 100vh;
+  width: 100vw;
+  scroll-behavior: smooth;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+
+.landing-header {
+  position: sticky;
+  top: 0;
+  height: 70px;
+  background: rgba(11, 15, 25, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-thin);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  z-index: 100;
+}
+
+@media (max-width: 768px) {
+  .landing-header {
+    padding: 0 20px;
+  }
+}
+
+.landing-hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 20px 60px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.hero-badge {
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  color: var(--color-secondary);
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.landing-hero h1 {
+  font-family: var(--font-heading);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #fff;
+  max-width: 800px;
+  background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media (max-width: 768px) {
+  .landing-hero h1 {
+    font-size: 2.2rem;
+  }
+}
+
+.landing-hero p {
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 650px;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+/* Glassmorphic Preview Canvas Card in Landing */
+.preview-mockup-wrapper {
+  max-width: 1000px;
+  width: 90%;
+  margin: 40px auto 80px auto;
+  background: rgba(17, 24, 39, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 10px;
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(99, 102, 241, 0.08);
+  animation: scaleIn 0.5s ease-out;
+}
+
+.preview-mockup-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  display: block;
+}
+
+/* Features Grid */
+.landing-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 20px;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-header h2 {
+  font-family: var(--font-heading);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.section-header p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  max-width: 500px;
+  margin: 0;
+}
+
+.features-grid-landing {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .features-grid-landing {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 640px) {
+  .features-grid-landing {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-card-landing {
+  background: var(--bg-card);
+  border: 1px solid var(--border-thin);
+  border-radius: 16px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.25s ease;
+}
+
+.feature-card-landing:hover {
+  transform: translateY(-5px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.4), 0 0 20px rgba(99, 102, 241, 0.05);
+}
+
+.feature-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--color-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.feature-card-landing h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+}
+
+.feature-card-landing p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Articles Section */
+.articles-grid-landing {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .articles-grid-landing {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .articles-grid-landing {
+    grid-template-columns: 1fr;
+  }
+}
+
+.article-card-landing {
+  background: rgba(17, 24, 39, 0.5);
+  border: 1px solid var(--border-thin);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.article-card-landing:hover {
+  border-color: rgba(56, 189, 248, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.article-card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.article-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-secondary);
+  letter-spacing: 0.05em;
+}
+
+.article-card-content h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.article-card-content p {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  flex: 1;
+  margin: 0;
+}
+
+.article-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.article-readmore:hover {
+  color: var(--color-secondary);
+}
+
+/* Call To Action Banner */
+.cta-banner-landing {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(14, 165, 233, 0.05) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  margin: 60px 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.cta-banner-landing h2 {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .cta-banner-landing h2 {
+    font-size: 1.8rem;
+  }
+}
+
+.cta-banner-landing p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0;
+}
+
+.landing-footer {
+  border-top: 1px solid var(--border-thin);
+  padding: 40px 20px;
+  text-align: center;
+  background: rgba(5, 7, 12, 0.4);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.landing-footer a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.landing-footer a:hover {
+  color: var(--color-secondary);
+}
+
+.landing-footer .sep {
+  margin: 0 10px;
+  color: var(--text-muted);
+}
