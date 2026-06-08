@@ -56,9 +56,9 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="header-toolbar">
       {/* Brand logo */}
-      <div className="logo">
+      <a href="/" className="logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
         📐 Ortho<span>s</span>
-      </div>
+      </a>
 
       {/* Center: Toolbar controls */}
       <div className="toolbar-group">
