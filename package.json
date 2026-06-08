@@ -1,5 +1,5 @@
 {
-  "name": "zeroplan-planner",
+  "name": "orthos-planner",
   "version": "1.0.0",
   "description": "Planificador de habitaciones y simulador de interiores 2D interactivo, 100% procesado en local.",
   "type": "module",

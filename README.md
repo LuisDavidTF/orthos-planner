@@ -1,4 +1,4 @@
-# ZeroPlan 📐
+# Orthos 📐
 
 > **Planificador de Habitaciones 2D Online Gratis** | **Diseño de Interiores 2D Gratis y Sin Registro**
 > Un simulador de cuarto online premium y privado que procesa todo localmente en tu navegador.
