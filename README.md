@@ -1,5 +1,7 @@
 # Orthos 📐
 
+**🌐 Aplicación en vivo:** [orthos.markdify.tech](https://orthos.markdify.tech)
+
 > **Planificador de Habitaciones 2D Online Gratis** | **Diseño de Interiores 2D Gratis y Sin Registro**
 > Un simulador de cuarto online premium y privado que procesa todo localmente en tu navegador.
 
@@ -72,4 +74,4 @@ pnpm run build
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT. Libre de usar, modificar y distribuir.
+Este proyecto está bajo la [Licencia MIT](LICENSE). Siéntete libre de usarlo, modificarlo y distribuirlo de manera comercial o privada.
