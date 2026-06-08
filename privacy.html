@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='bg' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23151d30'/%3E%3Cstop offset='100%25' stop-color='%23090d16'/%3E%3C/linearGradient%3E%3ClinearGradient id='glow' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%2338bdf8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='22' fill='url(%23bg)'/%3E%3Cpath d='M20 10v80M40 10v80M60 10v80M80 10v80M10 20h80M10 40h80M10 60h80M10 80h80' stroke='rgba(255,255,255,0.03)' stroke-width='1.5'/%3E%3Cpath d='M30 30h40v30H50v15H30Z' fill='none' stroke='url(%23glow)' stroke-width='6' stroke-linejoin='round' stroke-linecap='round'/%3E%3Ccircle cx='50' cy='60' r='6.5' fill='%2338bdf8' stroke='%230a0f1e' stroke-width='2'/%3E%3Ccircle cx='30' cy='30' r='4.5' fill='%236366f1'/%3E%3Ccircle cx='70' cy='30' r='4.5' fill='%236366f1'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Política de Privacidad | Orthos</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/src/index.css" />
+    <style>
+      .legal-content {
+        max-width: 800px;
+        margin: 60px auto;
+        padding: 40px;
+        background: rgba(17, 24, 39, 0.5);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--border-thin);
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+      }
+      .legal-content h1 {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, #ffffff 40%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .legal-content h2 {
+        font-family: var(--font-heading);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: #fff;
+        margin-top: 30px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        padding-bottom: 8px;
+      }
+      .legal-content p, .legal-content li {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+      }
+      .legal-content ul {
+        margin-left: 24px;
+        margin-bottom: 16px;
+      }
+    </style>
+  </head>
+  <body class="landing-page">
+    
+    <!-- HEADER -->
+    <header class="landing-header">
+      <a href="/" class="logo" style="text-decoration: none; color: #fff;">
+        📐 Ortho<span>s</span>
+      </a>
+      <div class="toolbar-group">
+        <a href="editor.html" class="btn btn-primary" style="font-size: 0.85rem; padding: 8px 16px; text-decoration: none;">
+          Abrir Editor ➜
+        </a>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="legal-content">
+      <h1>Política de Privacidad</h1>
+      <p><em>Última actualización: Junio 2026</em></p>
+      
+      <p>En Orthos, valoramos y respetamos profundamente la confidencialidad de tu información personal y física. Nuestra herramienta está diseñada bajo un paradigma estricto de <strong>procesamiento del lado del cliente (Client-Side)</strong>.</p>
+      
+      <h2>1. Principio de Cero Servidores (Zero-Server)</h2>
+      <p>A diferencia de los planificadores de diseño en la nube convencionales, Orthos opera <strong>100% de manera local en la memoria RAM y el almacenamiento aislado del navegador de tu dispositivo</strong>. Esto significa que:</p>
+      <ul>
+        <li>No guardamos tus planos en ninguna base de datos externa.</li>
+        <li>Tus imágenes, bosquejos, dimensiones de habitaciones y arreglos de muebles nunca son transmitidos por internet ni leídos por terceros.</li>
+        <li>No hay una API o servidor backend recopilando información de diseño.</li>
+      </ul>
+
+      <h2>2. Persistencia y Almacenamiento</h2>
+      <p>Tus borradores e historial de diseño se guardan de forma segura utilizando la API <strong>LocalStorage</strong> nativa de HTML5. Este almacenamiento reside físicamente en tu disco duro y está protegido por la política de seguridad del mismo origen del navegador (Same-Origin Policy), lo que impide que otras páginas web accedan a tus datos de Orthos.</p>
+      <p>Si deseas borrar toda la información almacenada en tu navegador, puedes hacerlo haciendo clic en el botón de "Limpiar Lienzo" dentro del editor o eliminando el historial de navegación de tu explorador web.</p>
+
+      <h2>3. Herramientas de Terceros y Cookies</h2>
+      <p>Orthos no utiliza cookies de seguimiento publicitario, píxeles de rastreo de redes sociales ni integraciones analíticas invasivas. El sitio opera como una utilidad estática y libre de rastreo.</p>
+
+      <h2>4. Enlaces a Sitios Web de Terceros</h2>
+      <p>Nuestra web de inicio y pie de página contiene enlaces a nuestro sitio principal <strong>Markdify.tech</strong> y a nuestro repositorio público de GitHub. La presente política de privacidad aplica únicamente a Orthos. Te recomendamos revisar las políticas correspondientes de los sitios externos al hacer clic en sus enlaces.</p>
+
+      <h2>5. Control de Datos y Decisiones</h2>
+      <p>Tú tienes el control absoluto de tus creaciones. Puedes exportar o importar tu espacio de trabajo en cualquier momento mediante archivos locales JSON, y descargar los resultados gráficos en SVG y PNG. Al descargar tus archivos estáticos, estos se transfieren de la memoria de tu navegador directamente a tus descargas locales sin intervención de servidores externos.</p>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+      <p>&copy; 2026 Orthos &mdash; Diseñador de planos locales de alta fidelidad bajo licencia MIT.</p>
+      <div style="margin-top: 12px;">
+        <a href="/">Inicio</a>
+        <span class="sep">&middot;</span>
+        <a href="terms.html">Términos de Servicio</a>
+        <span class="sep">&middot;</span>
+        <a href="editor.html">Abrir Planificador</a>
+      </div>
+    </footer>
+
+  </body>
+</html>

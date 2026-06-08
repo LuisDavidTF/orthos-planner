@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="header-toolbar">
       {/* Brand logo */}
-      <a href="/" className="logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
+      <a href="index.html" className="logo" style={{ textDecoration: 'none', cursor: 'pointer' }}>
         📐 Ortho<span>s</span>
       </a>
 
@@ -108,6 +108,23 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Export & Import actions */}
       <div className="toolbar-group">
+        <a
+          href="https://markdify.tech/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+          title="Ir a Markdify Tools"
+          style={{
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            borderColor: 'rgba(99, 102, 241, 0.35)',
+            color: '#818cf8',
+          }}
+        >
+          ❖ Markdify
+        </a>
         {/* Import JSON */}
         <input
           type="file"

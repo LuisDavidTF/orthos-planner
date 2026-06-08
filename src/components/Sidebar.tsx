@@ -29,6 +29,7 @@ interface SidebarProps {
   setUnit: (unit: Unit) => void;
   gridSettings: GridSettings;
   setGridSettings: (settings: GridSettings) => void;
+  isOpen: boolean;
 }
 
 const COLOR_PALETTE = [
@@ -60,12 +61,13 @@ const PREDEFINED_TEMPLATES: { type: ObjectType; name: string; w: number; h: numb
   { type: 'text', name: 'Nota de Texto', w: 100, h: 40, color: '#a1a1aa' },
 ];
 
-export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomSettings' | 'addObject' | 'unit' | 'setUnit'>> = ({
+export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomSettings' | 'addObject' | 'unit' | 'setUnit' | 'isOpen'>> = ({
   roomSettings,
   setRoomSettings,
   addObject,
   unit,
   setUnit,
+  isOpen,
 }) => {
   const vertices = roomSettings.vertices && roomSettings.vertices.length >= 3
     ? roomSettings.vertices
@@ -179,7 +181,7 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
   };
 
   return (
-    <aside className="sidebar">
+    <aside id="left-sidebar" className={`sidebar ${isOpen ? '' : 'collapsed'}`} aria-hidden={!isOpen}>
       <div className="sidebar-header">
         <h2>📐 Configuración</h2>
       </div>
@@ -282,6 +284,7 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
   unit,
   gridSettings,
   setGridSettings,
+  isOpen,
 }) => {
   const selectedObj = objects.find((o) => o.id === selectedId);
 
@@ -339,7 +342,7 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
   };
 
   return (
-    <aside className="sidebar right-sidebar">
+    <aside id="right-sidebar" className={`sidebar right-sidebar ${isOpen ? '' : 'collapsed'}`} aria-hidden={!isOpen}>
       <div className="sidebar-header">
         <h2>🛠️ Inspector</h2>
       </div>

@@ -102,6 +102,15 @@ body {
   border-left: 1px solid var(--border-thin);
 }
 
+.sidebar.collapsed {
+  width: 0;
+  border-left: none;
+  border-right: none;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .sidebar-header {
   padding: 18px 20px;
   border-bottom: 1px solid var(--border-thin);

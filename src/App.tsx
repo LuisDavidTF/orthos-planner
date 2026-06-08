@@ -4,6 +4,7 @@ import { LeftSidebar, RightSidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { ToastContainer, CustomModal } from './components/Alerts';
 import type { ToastMessage, ModalConfig } from './components/Alerts';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { RoomObject, RoomSettings, ObjectType, EditorState, GridSettings, Unit } from './types';
 
 // Predefined starting layout for demonstration
@@ -135,6 +136,26 @@ export const App: React.FC = () => {
   const [objects, setObjects] = useState<RoomObject[]>(INITIAL_OBJECTS);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   
+  // Collapsible Sidebars states
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+
+  // Auto-collapse sidebars on smaller screens (mobiles & tablets)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setLeftSidebarOpen(false);
+        setRightSidebarOpen(false);
+      } else {
+        setLeftSidebarOpen(true);
+        setRightSidebarOpen(true);
+      }
+    };
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Alerts and Modals states
   const [modalConfig, setModalConfig] = useState<ModalConfig>({
     isOpen: false,
@@ -666,6 +687,35 @@ export const App: React.FC = () => {
 
       {/* Main workspaces layout */}
       <div className="workspace-container">
+        {/* Left toggle button */}
+        <button
+          onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
+          style={{
+            position: 'fixed',
+            left: leftSidebarOpen ? '348px' : '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 99,
+            background: 'rgba(21, 29, 48, 0.95)',
+            border: '1px solid var(--border-thin)',
+            color: 'var(--text-primary)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-lg)',
+            transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s',
+          }}
+          aria-label={leftSidebarOpen ? "Contraer panel de herramientas izquierdo" : "Expandir panel de herramientas izquierdo"}
+          aria-expanded={leftSidebarOpen}
+          aria-controls="left-sidebar"
+        >
+          {leftSidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+        </button>
+
         {/* Left pane: settings, preset library */}
         <LeftSidebar
           roomSettings={roomSettings}
@@ -673,6 +723,7 @@ export const App: React.FC = () => {
           addObject={addObject}
           unit={unit}
           setUnit={setUnit}
+          isOpen={leftSidebarOpen}
         />
 
         {/* Center pane: SVG drawing area */}
@@ -696,6 +747,35 @@ export const App: React.FC = () => {
           onConfirm={triggerConfirm}
         />
 
+        {/* Right toggle button */}
+        <button
+          onClick={() => setRightSidebarOpen(!rightSidebarOpen)}
+          style={{
+            position: 'fixed',
+            right: rightSidebarOpen ? '348px' : '12px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 99,
+            background: 'rgba(21, 29, 48, 0.95)',
+            border: '1px solid var(--border-thin)',
+            color: 'var(--text-primary)',
+            borderRadius: '50%',
+            width: '32px',
+            height: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: 'var(--shadow-lg)',
+            transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s',
+          }}
+          aria-label={rightSidebarOpen ? "Contraer inspector de propiedades derecho" : "Expandir inspector de propiedades derecho"}
+          aria-expanded={rightSidebarOpen}
+          aria-controls="right-sidebar"
+        >
+          {rightSidebarOpen ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+        </button>
+
         {/* Right pane: inspector properties, checklists */}
         <RightSidebar
           roomSettings={roomSettings}
@@ -709,6 +789,7 @@ export const App: React.FC = () => {
           setUnit={setUnit}
           gridSettings={gridSettings}
           setGridSettings={setGridSettings}
+          isOpen={rightSidebarOpen}
         />
       </div>
 
