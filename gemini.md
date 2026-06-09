@@ -9,6 +9,7 @@ This file preserves the development context, architectural design, coding patter
 1. **Package Manager Policy**: Always use `pnpm`. Under no circumstances should `npm` or `yarn` be executed.
 2. **Security**: Ensure that no unverified third-party libraries are introduced. The interactive canvas uses standard React state binding with SVG nodes. Do not import raw script tags or load external JS files.
 3. **Vanilla CSS**: Maximize visual polish using standard CSS and custom variables. Avoid using Tailwind CSS unless explicitly requested by the user.
+4. **Documentation Sync**: Every time changes are committed or pushed to remote, ensure that `README.md`, legal compliance pages (`privacy.html`, `terms.html`), and shortcuts documentation (`shortcuts.html`) are reviewed and updated to keep documentation synchronized with implementation features.
 
 ---
 

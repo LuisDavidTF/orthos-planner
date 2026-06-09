@@ -33,6 +33,14 @@ Esta herramienta opera bajo la filosofía de **Privacidad Absoluta (Zero-Server)
   - Guarda tu espacio de trabajo como archivo `.json` local para importarlo y editarlo cuando quieras.
   - Exporta el plano en formato **vectorial SVG limpio** (removiendo controles de edición y con tipografía optimizada para visualizadores externos).
   - Exporta imágenes **PNG de alta resolución** listas para imprimir o enviar.
+* **Selección Múltiple y Operaciones en Lote**:
+  - **Arrastre de Caja de Selección (Marquee)**: Selecciona múltiples objetos trazando un recuadro de arrastre sobre el fondo; los elementos se iluminan en tiempo real con un borde y resplandor de selección.
+  - **Selección Acumulativa**: Mantén pulsada la tecla `Shift` o `Ctrl` al hacer clic para agrupar múltiples elementos de manera fluida.
+  - **Operaciones en Lote**: Arrastra, duplica, cambia de color o elimina múltiples objetos en grupo manteniendo sus distancias relativas.
+* **Navegación e Interacción Avanzada**:
+  - **Desplazamiento del Lienzo (Panning)**: Arrastra el fondo manteniendo presionada la **Barra Espaciadora** (cursor `grab`/`grabbing`), el botón central o el botón derecho del ratón.
+  - **Menú Contextual (Clic Derecho)**: Menú flotante y de diseño glassmorphic con opciones rápidas (Copiar, Pegar, Renombrar, Duplicar, Eliminar, Colores rápidos, Vaciar lienzo).
+  - **Indicadores y Atajos de Teclado**: Soporte para comandos rápidos (`Ctrl+C`, `Ctrl+V`, `Ctrl+D`, `Supr`, `R`) con etiquetas recordatorias integradas en el menú contextual y un botón de ayuda flotante persistente en la esquina del lienzo con el atajo global `Ctrl + /` para abrir el manual interactivo.
 * **Historial Completo**: Sistema integrado de **Deshacer (Undo)** y **Rehacer (Redo)** con atajos de teclado (`Ctrl + Z` / `Ctrl + Y`).
 
 ---
