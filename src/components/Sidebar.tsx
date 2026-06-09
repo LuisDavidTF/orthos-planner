@@ -78,6 +78,8 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
         { x: 0, y: 350 }
       ];
 
+  const [localWallLengths, setLocalWallLengths] = React.useState<string[]>([]);
+
   // Unit conversion helpers
   const toUnitValue = (cmVal: number) => {
     switch (unit) {
@@ -97,6 +99,24 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
       case 'cm':
       default: return val;
     }
+  };
+
+  // Sync local wall lengths state when vertices or unit changes
+  React.useEffect(() => {
+    const lengths = vertices.map((v, i) => {
+      const nextV = vertices[(i + 1) % vertices.length];
+      const len = Math.sqrt(Math.pow(nextV.x - v.x, 2) + Math.pow(nextV.y - v.y, 2));
+      return toUnitValue(len).toString();
+    });
+    setLocalWallLengths(lengths);
+  }, [roomSettings.vertices, unit]);
+
+  const handleLocalWallLengthChange = (idx: number, val: string) => {
+    setLocalWallLengths((prev) => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
   };
 
   // Wall displacement math when user changes a wall length manually
@@ -144,6 +164,33 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
       });
       setRoomSettings({ ...roomSettings, vertices: newVertices });
     }
+  };
+
+  const applyWallLength = (idx: number) => {
+    const typedVal = parseFloat(localWallLengths[idx]);
+    if (!isNaN(typedVal) && typedVal > 0) {
+      handleWallLengthChange(idx, typedVal.toString());
+    } else {
+      // Reset to actual
+      const v = vertices[idx];
+      const nextV = vertices[(idx + 1) % vertices.length];
+      const len = Math.sqrt(Math.pow(nextV.x - v.x, 2) + Math.pow(nextV.y - v.y, 2));
+      handleLocalWallLengthChange(idx, toUnitValue(len).toString());
+    }
+  };
+
+  const handleWallLengthBlur = (idx: number) => {
+    applyWallLength(idx);
+  };
+
+  const isWallLengthDifferent = (idx: number) => {
+    const v = vertices[idx];
+    const nextV = vertices[(idx + 1) % vertices.length];
+    const actualLen = Math.sqrt(Math.pow(nextV.x - v.x, 2) + Math.pow(nextV.y - v.y, 2));
+    const actualConverted = toUnitValue(actualLen);
+    
+    const typedVal = parseFloat(localWallLengths[idx]);
+    return !isNaN(typedVal) && typedVal !== actualConverted;
   };
 
   // Presets
@@ -224,25 +271,37 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
 
           <div className="form-group" style={{ gap: '10px' }}>
             <label>Largo de Paredes</label>
-            {vertices.map((v, i) => {
-              const nextV = vertices[(i + 1) % vertices.length];
-              const len = Math.sqrt(Math.pow(nextV.x - v.x, 2) + Math.pow(nextV.y - v.y, 2));
+            {vertices.map((_, i) => {
               return (
-                <div key={`wall-input-${i}`} className="input-row" style={{ alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', width: '65px', fontWeight: 600 }}>
+                <div key={`wall-input-${i}`} className="input-row" style={{ alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', width: '55px', fontWeight: 600 }}>
                     Pared {i + 1}:
                   </span>
-                  <div className="input-with-unit">
+                  <div className="input-with-unit" style={{ flex: 1 }}>
                     <input
                       type="number"
                       className="form-input"
-                      min="10"
-                      step="1"
-                      value={toUnitValue(len)}
-                      onChange={(e) => handleWallLengthChange(i, e.target.value)}
+                      value={localWallLengths[i] || ''}
+                      onChange={(e) => handleLocalWallLengthChange(i, e.target.value)}
+                      onBlur={() => handleWallLengthBlur(i)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          applyWallLength(i);
+                        }
+                      }}
                     />
                     <span className="input-unit">{unit}</span>
                   </div>
+                  {isWallLengthDifferent(i) && (
+                    <button
+                      className="btn btn-primary"
+                      style={{ padding: '6px 8px', fontSize: '0.7rem', display: 'flex', alignItems: 'center' }}
+                      onClick={() => applyWallLength(i)}
+                      title="Aplicar nueva medida a esta pared"
+                    >
+                      Ajustar
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -309,28 +368,108 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
     }
   };
 
+  const [localWidth, setLocalWidth] = React.useState('');
+  const [localHeight, setLocalHeight] = React.useState('');
+  const [localRotation, setLocalRotation] = React.useState('');
+
+  // Sync local states with selected object values
+  React.useEffect(() => {
+    if (selectedObj) {
+      setLocalWidth(toUnitValue(selectedObj.width).toString());
+      setLocalHeight(toUnitValue(selectedObj.height).toString());
+      setLocalRotation(selectedObj.rotation.toString());
+    } else {
+      setLocalWidth('');
+      setLocalHeight('');
+      setLocalRotation('');
+    }
+  }, [selectedId, selectedObj?.width, selectedObj?.height, selectedObj?.rotation, unit]);
+
   const handlePropChange = (key: keyof RoomObject, value: any) => {
     if (!selectedId) return;
     updateObject(selectedId, { [key]: value });
   };
 
-  const handleDimChange = (dimension: 'width' | 'height', valStr: string) => {
+  const handleWidthChange = (valStr: string) => {
+    setLocalWidth(valStr);
     if (!selectedId || !selectedObj) return;
-    const numericVal = parseFloat(valStr) || 0;
-    if (numericVal <= 0) return;
-    const cmValue = fromUnitValue(numericVal);
+    const val = parseFloat(valStr);
+    if (!isNaN(val) && val > 0) {
+      const cmValue = fromUnitValue(val);
+      updateObject(selectedId, { width: Math.round(cmValue) });
+    }
+  };
+
+  const handleWidthBlur = () => {
+    if (!selectedId || !selectedObj) return;
+    const val = parseFloat(localWidth);
+    if (isNaN(val) || val <= 0) {
+      // Reset to current width
+      setLocalWidth(toUnitValue(selectedObj.width).toString());
+      return;
+    }
+    const cmValue = fromUnitValue(val);
     
     // Boundary clamp: object cannot exceed room size
     const vertices = roomSettings.vertices || [];
     const minX = vertices.length > 0 ? Math.min(...vertices.map(v => v.x)) : 0;
     const maxX = vertices.length > 0 ? Math.max(...vertices.map(v => v.x)) : 400;
-    const minY = vertices.length > 0 ? Math.min(...vertices.map(v => v.y)) : 0;
-    const maxY = vertices.length > 0 ? Math.max(...vertices.map(v => v.y)) : 350;
-    const limit = dimension === 'width' ? (maxX - minX) : (maxY - minY);
+    const limit = maxX - minX;
     
     const finalVal = Math.min(limit, Math.max(5, Math.round(cmValue)));
+    updateObject(selectedId, { width: finalVal });
+    setLocalWidth(toUnitValue(finalVal).toString());
+  };
+
+  const handleHeightChange = (valStr: string) => {
+    setLocalHeight(valStr);
+    if (!selectedId || !selectedObj) return;
+    const val = parseFloat(valStr);
+    if (!isNaN(val) && val > 0) {
+      const cmValue = fromUnitValue(val);
+      updateObject(selectedId, { height: Math.round(cmValue) });
+    }
+  };
+
+  const handleHeightBlur = () => {
+    if (!selectedId || !selectedObj) return;
+    const val = parseFloat(localHeight);
+    if (isNaN(val) || val <= 0) {
+      setLocalHeight(toUnitValue(selectedObj.height).toString());
+      return;
+    }
+    const cmValue = fromUnitValue(val);
     
-    updateObject(selectedId, { [dimension]: finalVal });
+    // Boundary clamp: object cannot exceed room size
+    const vertices = roomSettings.vertices || [];
+    const minY = vertices.length > 0 ? Math.min(...vertices.map(v => v.y)) : 0;
+    const maxY = vertices.length > 0 ? Math.max(...vertices.map(v => v.y)) : 350;
+    const limit = maxY - minY;
+    
+    const finalVal = Math.min(limit, Math.max(5, Math.round(cmValue)));
+    updateObject(selectedId, { height: finalVal });
+    setLocalHeight(toUnitValue(finalVal).toString());
+  };
+
+  const handleRotationChange = (valStr: string) => {
+    setLocalRotation(valStr);
+    if (!selectedId || !selectedObj) return;
+    const val = parseInt(valStr);
+    if (!isNaN(val)) {
+      updateObject(selectedId, { rotation: val % 360 });
+    }
+  };
+
+  const handleRotationBlur = () => {
+    if (!selectedId || !selectedObj) return;
+    const val = parseInt(localRotation);
+    if (isNaN(val)) {
+      setLocalRotation(selectedObj.rotation.toString());
+      return;
+    }
+    const finalVal = (val % 360 + 360) % 360;
+    updateObject(selectedId, { rotation: finalVal });
+    setLocalRotation(finalVal.toString());
   };
 
   // Move layers (adjust z-index)
@@ -383,10 +522,14 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
                 <input
                   type="number"
                   className="form-input"
-                  min="5"
-                  step="1"
-                  value={toUnitValue(selectedObj.width)}
-                  onChange={(e) => handleDimChange('width', e.target.value)}
+                  value={localWidth}
+                  onChange={(e) => handleWidthChange(e.target.value)}
+                  onBlur={handleWidthBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleWidthBlur();
+                    }
+                  }}
                 />
                 <span className="input-unit">{unit}</span>
               </div>
@@ -398,10 +541,14 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
                 <input
                   type="number"
                   className="form-input"
-                  min="5"
-                  step="1"
-                  value={toUnitValue(selectedObj.height)}
-                  onChange={(e) => handleDimChange('height', e.target.value)}
+                  value={localHeight}
+                  onChange={(e) => handleHeightChange(e.target.value)}
+                  onBlur={handleHeightBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleHeightBlur();
+                    }
+                  }}
                 />
                 <span className="input-unit">{unit}</span>
               </div>
@@ -423,16 +570,24 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
                   max="359"
                   value={selectedObj.rotation}
                   style={{ flex: 1 }}
-                  onChange={(e) => handlePropChange('rotation', parseInt(e.target.value))}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    handlePropChange('rotation', val);
+                    setLocalRotation(val.toString());
+                  }}
                 />
                 <input
                   type="number"
                   className="form-input"
-                  min="0"
-                  max="359"
-                  value={selectedObj.rotation}
+                  value={localRotation}
                   style={{ width: '70px', padding: '8px' }}
-                  onChange={(e) => handlePropChange('rotation', (parseInt(e.target.value) || 0) % 360)}
+                  onChange={(e) => handleRotationChange(e.target.value)}
+                  onBlur={handleRotationBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleRotationBlur();
+                    }
+                  }}
                 />
               </div>
             </div>

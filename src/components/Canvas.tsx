@@ -467,164 +467,115 @@ export const Canvas: React.FC<CanvasProps> = ({
     const o = selectedObj;
     const cx = o.x + o.width / 2;
     const cy = o.y + o.height / 2;
+    const theta = (o.rotation * Math.PI) / 180;
 
-    let leftX: number | null = null;
-    let rightX: number | null = null;
-    let topY: number | null = null;
-    let bottomY: number | null = null;
+    // Helper to find closest ray intersection with wall segments
+    const getClosestIntersection = (S: Point, D: { x: number; y: number }) => {
+      let minT: number | null = null;
+      let closestPt: Point | null = null;
 
-    for (let i = 0; i < vertices.length; i++) {
-      const p1 = vertices[i];
-      const p2 = vertices[(i + 1) % vertices.length];
+      for (let i = 0; i < vertices.length; i++) {
+        const p1 = vertices[i];
+        const p2 = vertices[(i + 1) % vertices.length];
 
-      // Horizontal intersection projection (y = cy)
-      const miny = Math.min(p1.y, p2.y);
-      const maxy = Math.max(p1.y, p2.y);
-      if (cy >= miny && cy <= maxy && p1.y !== p2.y) {
-        const ix = p1.x + ((cy - p1.y) * (p2.x - p1.x)) / (p2.y - p1.y);
-        const minx = Math.min(p1.x, p2.x);
-        const maxx = Math.max(p1.x, p2.x);
-        if (ix >= minx && ix <= maxx) {
-          if (ix < cx) {
-            if (leftX === null || ix > leftX) leftX = ix;
-          } else if (ix > cx) {
-            if (rightX === null || ix < rightX) rightX = ix;
+        const Vx = p2.x - p1.x;
+        const Vy = p2.y - p1.y;
+
+        const det = D.y * Vx - D.x * Vy;
+        if (Math.abs(det) < 1e-6) continue; // Parallel
+
+        const t = (Vx * (S.y - p1.y) - Vy * (S.x - p1.x)) / det;
+        const u = (D.x * (S.y - p1.y) - D.y * (S.x - p1.x)) / det;
+
+        if (t >= 0 && u >= 0 && u <= 1) {
+          if (minT === null || t < minT) {
+            minT = t;
+            closestPt = {
+              x: S.x + t * D.x,
+              y: S.y + t * D.y,
+            };
           }
         }
       }
+      return minT !== null && closestPt ? { t: minT, pt: closestPt } : null;
+    };
 
-      // Vertical intersection projection (x = cx)
-      const minx = Math.min(p1.x, p2.x);
-      const maxx = Math.max(p1.x, p2.x);
-      if (cx >= minx && cx <= maxx && p1.x !== p2.x) {
-        const iy = p1.y + ((cx - p1.x) * (p2.y - p1.y)) / (p2.x - p1.x);
-        const miny = Math.min(p1.y, p2.y);
-        const maxy = Math.max(p1.y, p2.y);
-        if (iy >= miny && iy <= maxy) {
-          if (iy < cy) {
-            if (topY === null || iy > topY) topY = iy;
-          } else if (iy > cy) {
-            if (bottomY === null || iy < bottomY) bottomY = iy;
-          }
-        }
-      }
-    }
+    const faces = [
+      {
+        key: 'left',
+        S: { x: cx - (o.width / 2) * Math.cos(theta), y: cy - (o.width / 2) * Math.sin(theta) },
+        D: { x: -Math.cos(theta), y: -Math.sin(theta) },
+      },
+      {
+        key: 'right',
+        S: { x: cx + (o.width / 2) * Math.cos(theta), y: cy + (o.width / 2) * Math.sin(theta) },
+        D: { x: Math.cos(theta), y: Math.sin(theta) },
+      },
+      {
+        key: 'top',
+        S: { x: cx + (o.height / 2) * Math.sin(theta), y: cy - (o.height / 2) * Math.cos(theta) },
+        D: { x: Math.sin(theta), y: -Math.cos(theta) },
+      },
+      {
+        key: 'bottom',
+        S: { x: cx - (o.height / 2) * Math.sin(theta), y: cy + (o.height / 2) * Math.cos(theta) },
+        D: { x: -Math.sin(theta), y: Math.cos(theta) },
+      },
+    ];
 
     const guides = [];
 
-    // Left line & label
-    if (leftX !== null && leftX < o.x) {
-      const dist = o.x - leftX;
-      guides.push(
-        <g key="left-guide">
-          <line x1={leftX} y1={cy} x2={o.x} y2={cy} stroke="var(--color-secondary)" strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-          <foreignObject x={(leftX + o.x) / 2 - 25} y={cy - 9} width="50" height="18" style={{ overflow: 'visible' }}>
-            <div style={{
-              background: 'var(--bg-canvas)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              borderRadius: '3px',
-              color: 'var(--color-secondary)',
-              fontSize: '9px',
-              fontWeight: 600,
-              textAlign: 'center',
-              lineHeight: '16px',
-              fontFamily: 'var(--font-heading)',
-              transform: `scale(${1 / Math.max(0.6, Math.min(renderScale, 2))})`,
-              transformOrigin: 'center',
-            }}>
-              {formatValue(dist)}
-            </div>
-          </foreignObject>
-        </g>
-      );
-    }
+    for (const face of faces) {
+      const hit = getClosestIntersection(face.S, face.D);
+      if (hit && hit.t > 1) {
+        const { t, pt } = hit;
+        const midX = (face.S.x + pt.x) / 2;
+        const midY = (face.S.y + pt.y) / 2;
 
-    // Right line & label
-    if (rightX !== null && rightX > o.x + o.width) {
-      const dist = rightX - (o.x + o.width);
-      guides.push(
-        <g key="right-guide">
-          <line x1={o.x + o.width} y1={cy} x2={rightX} y2={cy} stroke="var(--color-secondary)" strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-          <foreignObject x={(o.x + o.width + rightX) / 2 - 25} y={cy - 9} width="50" height="18" style={{ overflow: 'visible' }}>
-            <div style={{
-              background: 'var(--bg-canvas)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              borderRadius: '3px',
-              color: 'var(--color-secondary)',
-              fontSize: '9px',
-              fontWeight: 600,
-              textAlign: 'center',
-              lineHeight: '16px',
-              fontFamily: 'var(--font-heading)',
-              transform: `scale(${1 / Math.max(0.6, Math.min(renderScale, 2))})`,
-              transformOrigin: 'center',
-            }}>
-              {formatValue(dist)}
-            </div>
-          </foreignObject>
-        </g>
-      );
-    }
-
-    // Top line & label
-    if (topY !== null && topY < o.y) {
-      const dist = o.y - topY;
-      guides.push(
-        <g key="top-guide">
-          <line x1={centerX} y1={topY} x2={centerX} y2={o.y} stroke="var(--color-secondary)" strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-          <foreignObject x={centerX - 25} y={(topY + o.y) / 2 - 9} width="50" height="18" style={{ overflow: 'visible' }}>
-            <div style={{
-              background: 'var(--bg-canvas)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              borderRadius: '3px',
-              color: 'var(--color-secondary)',
-              fontSize: '9px',
-              fontWeight: 600,
-              textAlign: 'center',
-              lineHeight: '16px',
-              fontFamily: 'var(--font-heading)',
-              transform: `scale(${1 / Math.max(0.6, Math.min(renderScale, 2))})`,
-              transformOrigin: 'center',
-            }}>
-              {formatValue(dist)}
-            </div>
-          </foreignObject>
-        </g>
-      );
-    }
-
-    // Bottom line & label
-    if (bottomY !== null && bottomY > o.y + o.height) {
-      const dist = bottomY - (o.y + o.height);
-      guides.push(
-        <g key="bottom-guide">
-          <line x1={centerX} y1={o.y + o.height} x2={centerX} y2={bottomY} stroke="var(--color-secondary)" strokeWidth={1} strokeDasharray="3 3" vectorEffect="non-scaling-stroke" />
-          <foreignObject x={centerX - 25} y={(o.y + o.height + bottomY) / 2 - 9} width="50" height="18" style={{ overflow: 'visible' }}>
-            <div style={{
-              background: 'var(--bg-canvas)',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
-              borderRadius: '3px',
-              color: 'var(--color-secondary)',
-              fontSize: '9px',
-              fontWeight: 600,
-              textAlign: 'center',
-              lineHeight: '16px',
-              fontFamily: 'var(--font-heading)',
-              transform: `scale(${1 / Math.max(0.6, Math.min(renderScale, 2))})`,
-              transformOrigin: 'center',
-            }}>
-              {formatValue(dist)}
-            </div>
-          </foreignObject>
-        </g>
-      );
+        guides.push(
+          <g key={`${face.key}-guide`}>
+            <line
+              x1={face.S.x}
+              y1={face.S.y}
+              x2={pt.x}
+              y2={pt.y}
+              stroke="var(--color-secondary)"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+              vectorEffect="non-scaling-stroke"
+            />
+            <foreignObject
+              x={midX - 25}
+              y={midY - 9}
+              width="50"
+              height="18"
+              style={{ overflow: 'visible' }}
+            >
+              <div
+                style={{
+                  background: 'var(--bg-canvas)',
+                  border: '1px solid rgba(56, 189, 248, 0.3)',
+                  borderRadius: '3px',
+                  color: 'var(--color-secondary)',
+                  fontSize: '9px',
+                  fontWeight: 600,
+                  textAlign: 'center',
+                  lineHeight: '16px',
+                  fontFamily: 'var(--font-heading)',
+                  transform: `scale(${1 / Math.max(0.6, Math.min(renderScale, 2))})`,
+                  transformOrigin: 'center',
+                }}
+              >
+                {formatValue(t)}
+              </div>
+            </foreignObject>
+          </g>
+        );
+      }
     }
 
     return guides;
   };
-
-  // Midpoint of a selected object
-  const centerX = selectedObj ? selectedObj.x + selectedObj.width / 2 : 0;
 
   return (
     <div
