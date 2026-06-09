@@ -1217,3 +1217,41 @@ input[type="number"] {
   margin: 0 10px;
   color: var(--text-muted);
 }
+
+/* Responsive Header Toolbar Settings */
+@media (max-width: 900px) {
+  .header-toolbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .toolbar-group {
+    gap: 6px;
+  }
+  .header-toolbar .btn-text {
+    display: none;
+  }
+  .header-toolbar .btn {
+    padding: 8px;
+    justify-content: center;
+    min-width: unset;
+  }
+  .toolbar-divider {
+    margin: 0 2px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-toolbar {
+    height: auto;
+    min-height: 64px;
+    padding: 10px 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .header-toolbar .logo {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 2px;
+  }
+}

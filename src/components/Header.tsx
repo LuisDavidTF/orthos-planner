@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
             color: '#818cf8',
           }}
         >
-          ❖ Markdify
+          ❖ <span className="btn-text">Markdify</span>
         </a>
         {/* Import JSON */}
         <input
@@ -133,22 +133,22 @@ export const Header: React.FC<HeaderProps> = ({
           accept=".json"
           onChange={importJSON}
         />
-        <button className="btn btn-secondary" onClick={handleImportClick} title="Cargar proyecto JSON">
-          <Upload size={14} /> Importar
+        <button className="btn btn-secondary" onClick={handleImportClick} title="Importar proyecto JSON">
+          <Upload size={14} /> <span className="btn-text">Importar</span>
         </button>
 
         {/* Export JSON */}
-        <button className="btn btn-secondary" onClick={exportJSON} title="Descargar proyecto JSON">
-          <Download size={14} /> Guardar
+        <button className="btn btn-secondary" onClick={exportJSON} title="Guardar proyecto JSON">
+          <Download size={14} /> <span className="btn-text">Guardar</span>
         </button>
 
         {/* Export Drawing formats */}
-        <button className="btn btn-secondary" onClick={exportSVG} title="Descargar plano en formato vectorial SVG">
-          <ImageIcon size={14} /> Exportar SVG
+        <button className="btn btn-secondary" onClick={exportSVG} title="Exportar plano en SVG">
+          <ImageIcon size={14} /> <span className="btn-text">Exportar SVG</span>
         </button>
         
-        <button className="btn btn-primary" onClick={exportPNG} title="Descargar plano en formato de imagen PNG">
-          <ImageIcon size={14} /> Exportar PNG
+        <button className="btn btn-primary" onClick={exportPNG} title="Exportar plano en PNG">
+          <ImageIcon size={14} /> <span className="btn-text">Exportar PNG</span>
         </button>
       </div>
     </header>

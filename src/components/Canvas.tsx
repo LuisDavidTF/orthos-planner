@@ -22,6 +22,27 @@ interface CanvasProps {
   onConfirm: (title: string, message: string, onConfirm: () => void) => void;
 }
 
+const getObjectCorners = (obj: RoomObject): Point[] => {
+  const cx = obj.x + obj.width / 2;
+  const cy = obj.y + obj.height / 2;
+  const theta = (obj.rotation * Math.PI) / 180;
+  
+  const halfW = obj.width / 2;
+  const halfH = obj.height / 2;
+  
+  const localCorners = [
+    { x: -halfW, y: -halfH }, // Top-left
+    { x: halfW, y: -halfH },  // Top-right
+    { x: halfW, y: halfH },   // Bottom-right
+    { x: -halfW, y: halfH },  // Bottom-left
+  ];
+  
+  return localCorners.map((pt) => ({
+    x: cx + pt.x * Math.cos(theta) - pt.y * Math.sin(theta),
+    y: cy + pt.x * Math.sin(theta) + pt.y * Math.cos(theta),
+  }));
+};
+
 export const Canvas: React.FC<CanvasProps> = ({
   roomSettings,
   setRoomSettings,
@@ -469,14 +490,37 @@ export const Canvas: React.FC<CanvasProps> = ({
     const cy = o.y + o.height / 2;
     const theta = (o.rotation * Math.PI) / 180;
 
-    // Helper to find closest ray intersection with wall segments
+    // Collect obstacle segments: walls + other objects
+    const obstacleSegments: { p1: Point; p2: Point }[] = [];
+
+    // 1. Add room walls
+    for (let i = 0; i < vertices.length; i++) {
+      obstacleSegments.push({
+        p1: vertices[i],
+        p2: vertices[(i + 1) % vertices.length],
+      });
+    }
+
+    // 2. Add other furniture objects' bounds
+    for (const obj of objects) {
+      if (obj.id === o.id) continue;
+      const corners = getObjectCorners(obj);
+      for (let i = 0; i < 4; i++) {
+        obstacleSegments.push({
+          p1: corners[i],
+          p2: corners[(i + 1) % 4],
+        });
+      }
+    }
+
+    // Helper to find closest ray intersection with obstacle segments
     const getClosestIntersection = (S: Point, D: { x: number; y: number }) => {
       let minT: number | null = null;
       let closestPt: Point | null = null;
 
-      for (let i = 0; i < vertices.length; i++) {
-        const p1 = vertices[i];
-        const p2 = vertices[(i + 1) % vertices.length];
+      for (const seg of obstacleSegments) {
+        const p1 = seg.p1;
+        const p2 = seg.p2;
 
         const Vx = p2.x - p1.x;
         const Vy = p2.y - p1.y;
@@ -484,8 +528,8 @@ export const Canvas: React.FC<CanvasProps> = ({
         const det = D.y * Vx - D.x * Vy;
         if (Math.abs(det) < 1e-6) continue; // Parallel
 
-        const t = (Vx * (S.y - p1.y) - Vy * (S.x - p1.x)) / det;
-        const u = (D.x * (S.y - p1.y) - D.y * (S.x - p1.x)) / det;
+        const t = (Vy * (S.x - p1.x) - Vx * (S.y - p1.y)) / det;
+        const u = (D.y * (S.x - p1.x) - D.x * (S.y - p1.y)) / det;
 
         if (t >= 0 && u >= 0 && u <= 1) {
           if (minT === null || t < minT) {
