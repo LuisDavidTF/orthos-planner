@@ -3,9 +3,10 @@ import { Header } from './components/Header';
 import { LeftSidebar, RightSidebar } from './components/Sidebar';
 import { Canvas } from './components/Canvas';
 import { ToastContainer, CustomModal } from './components/Alerts';
+import { ShortcutsModal } from './components/ShortcutsModal';
 import type { ToastMessage, ModalConfig } from './components/Alerts';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { RoomObject, RoomSettings, ObjectType, EditorState, GridSettings, Unit } from './types';
+import { ChevronLeft, ChevronRight, Copy, Clipboard, Trash2, Plus, Palette, Edit3 } from 'lucide-react';
+import type { RoomObject, RoomSettings, ObjectType, EditorState, GridSettings, Unit, Point } from './types';
 
 // Predefined starting layout for demonstration
 const INITIAL_ROOM_SETTINGS: RoomSettings = {
@@ -134,11 +135,31 @@ export const App: React.FC = () => {
   // Main states
   const [roomSettings, setRoomSettings] = useState<RoomSettings>(INITIAL_ROOM_SETTINGS);
   const [objects, setObjects] = useState<RoomObject[]>(INITIAL_OBJECTS);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
+  const setSelectedId = (id: string | null) => {
+    setSelectedIds(id ? [id] : []);
+  };
   
   // Collapsible Sidebars states
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+
+  // Clipboard and Context Menu states
+  const [clipboard, setClipboard] = useState<RoomObject[]>([]);
+  const [contextMenu, setContextMenu] = useState<{
+    visible: boolean;
+    x: number;
+    y: number;
+    targetId: string | null;
+    canvasCoords: Point;
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    targetId: null,
+    canvasCoords: { x: 0, y: 0 }
+  });
 
   // Auto-collapse sidebars on smaller screens (mobiles & tablets)
   useEffect(() => {
@@ -163,6 +184,7 @@ export const App: React.FC = () => {
     title: '',
     message: '',
   });
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
   const addToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
@@ -296,44 +318,52 @@ export const App: React.FC = () => {
   };
 
   // Add Object
-  const addObject = (type: ObjectType) => {
+  const addObject = (type: ObjectType, preset?: { name: string; w: number; h: number; color: string }) => {
     const id = `obj-${Date.now()}`;
     
     // Get default name
     const count = objects.filter((o) => o.type === type).length + 1;
-    const typeLabel =
-      type === 'bed' ? 'Cama' :
-      type === 'nightstand' ? 'Buró' :
-      type === 'dresser' ? 'Tocador' :
-      type === 'stairs' ? 'Escalera' :
-      type === 'box' ? 'Caja' :
-      type === 'door' ? 'Puerta' :
-      type === 'window' ? 'Ventana' :
-      type === 'sofa' ? 'Sofá' :
-      type === 'table' ? 'Escritorio' :
-      type === 'chair' ? 'Silla' :
-      type === 'wardrobe' ? 'Ropero' : 'Nota';
-      
-    const name = `${typeLabel} ${count}`;
-
-    // Get default sizing
+    let name = '';
     let w = 80;
     let h = 80;
     let color = '#6366f1';
 
-    switch (type) {
-      case 'bed': w = 140; h = 190; color = '#6366f1'; break;
-      case 'nightstand': w = 50; h = 45; color = '#38bdf8'; break;
-      case 'dresser': w = 120; h = 50; color = '#38bdf8'; break;
-      case 'wardrobe': w = 150; h = 60; color = '#8b5cf6'; break;
-      case 'sofa': w = 180; h = 90; color = '#10b981'; break;
-      case 'table': w = 120; h = 75; color = '#f59e0b'; break;
-      case 'chair': w = 45; h = 45; color = '#f59e0b'; break;
-      case 'stairs': w = 80; h = 200; color = '#a1a1aa'; break;
-      case 'door': w = 80; h = 8; color = '#ef4444'; break;
-      case 'window': w = 120; h = 15; color = '#ec4899'; break;
-      case 'box': w = 50; h = 50; color = '#a1a1aa'; break;
-      case 'text': w = 100; h = 40; color = '#a1a1aa'; break;
+    if (preset) {
+      const baseName = preset.name.replace(/\s\d+$/, '');
+      name = `${baseName} ${count}`;
+      w = preset.w;
+      h = preset.h;
+      color = preset.color;
+    } else {
+      const typeLabel =
+        type === 'bed' ? 'Cama' :
+        type === 'nightstand' ? 'Buró' :
+        type === 'dresser' ? 'Tocador' :
+        type === 'stairs' ? 'Escalera' :
+        type === 'box' ? 'Caja' :
+        type === 'door' ? 'Puerta' :
+        type === 'window' ? 'Ventana' :
+        type === 'sofa' ? 'Sofá' :
+        type === 'table' ? 'Escritorio' :
+        type === 'chair' ? 'Silla' :
+        type === 'wardrobe' ? 'Ropero' : 'Nota';
+        
+      name = `${typeLabel} ${count}`;
+
+      switch (type) {
+        case 'bed': w = 140; h = 190; color = '#6366f1'; break;
+        case 'nightstand': w = 50; h = 45; color = '#38bdf8'; break;
+        case 'dresser': w = 120; h = 50; color = '#38bdf8'; break;
+        case 'wardrobe': w = 150; h = 60; color = '#8b5cf6'; break;
+        case 'sofa': w = 180; h = 90; color = '#10b981'; break;
+        case 'table': w = 120; h = 75; color = '#f59e0b'; break;
+        case 'chair': w = 45; h = 45; color = '#f59e0b'; break;
+        case 'stairs': w = 80; h = 200; color = '#a1a1aa'; break;
+        case 'door': w = 80; h = 8; color = '#ef4444'; break;
+        case 'window': w = 120; h = 15; color = '#ec4899'; break;
+        case 'box': w = 50; h = 50; color = '#a1a1aa'; break;
+        case 'text': w = 100; h = 40; color = '#a1a1aa'; break;
+      }
     }
 
     // Spawn at room center (computed from bounding box of vertices)
@@ -420,58 +450,327 @@ export const App: React.FC = () => {
     commitToHistory(newSettings, objects);
   };
 
-  // Delete Object
-  const deleteObject = (id: string) => {
-    const obj = objects.find((o) => o.id === id);
-    const filtered = objects.filter((o) => o.id !== id);
+  // Delete Object(s)
+  const deleteObject = (ids: string | string[]) => {
+    const targetIds = Array.isArray(ids) ? ids : [ids];
+    if (targetIds.length === 0) return;
+
+    const filtered = objects.filter((o) => !targetIds.includes(o.id));
     setObjects(filtered);
     commitToHistory(roomSettings, filtered);
-    if (selectedId === id) setSelectedId(null);
-    if (obj) {
-      addToast(`Eliminado: ${obj.name}`, 'info');
+    
+    // Clear selection
+    const nextSelectedIds = selectedIds.filter((id) => !targetIds.includes(id));
+    setSelectedIds(nextSelectedIds);
+
+    const deletedNames = objects
+      .filter((o) => targetIds.includes(o.id))
+      .map((o) => o.name);
+
+    if (targetIds.length === 1 && deletedNames.length > 0) {
+      addToast(`Eliminado: ${deletedNames[0]}`, 'info');
+    } else if (targetIds.length > 1) {
+      addToast(`${targetIds.length} objetos eliminados`, 'info');
     }
   };
 
-  // Duplicate Object
-  const duplicateObject = (id: string) => {
-    const obj = objects.find((o) => o.id === id);
-    if (!obj) return;
+  // Duplicate Object(s)
+  const duplicateObject = (ids: string | string[]) => {
+    const targetIds = Array.isArray(ids) ? ids : [ids];
+    if (targetIds.length === 0) return;
 
-    const clonedId = `obj-${Date.now()}`;
-    const cloned: RoomObject = {
-      ...obj,
-      id: clonedId,
-      name: `${obj.name} (Copia)`,
-      // Shift position slightly to avoid perfect overlap (using vertex bounding box)
-      x: Math.min((roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.x)) : 400) - obj.width, obj.x + 20),
-      y: Math.min((roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.y)) : 350) - obj.height, obj.y + 20),
-      zIndex: Math.max(...objects.map((o) => o.zIndex)) + 1,
-    };
+    const newIds: string[] = [];
+    let nextObjects = [...objects];
 
-    const newObjects = [...objects, cloned];
-    setObjects(newObjects);
-    commitToHistory(roomSettings, newObjects);
-    setSelectedId(clonedId);
-    addToast(`Duplicado: ${obj.name}`, 'success');
+    targetIds.forEach((id, index) => {
+      const obj = objects.find((o) => o.id === id);
+      if (!obj) return;
+
+      const clonedId = `obj-${Date.now()}-${index}`;
+      const cloned: RoomObject = {
+        ...obj,
+        id: clonedId,
+        name: `${obj.name} (Copia)`,
+        x: Math.min((roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.x)) : 400) - obj.width, obj.x + 20),
+        y: Math.min((roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.y)) : 350) - obj.height, obj.y + 20),
+        zIndex: Math.max(...nextObjects.map((o) => o.zIndex)) + 1,
+      };
+      nextObjects.push(cloned);
+      newIds.push(clonedId);
+    });
+
+    setObjects(nextObjects);
+    commitToHistory(roomSettings, nextObjects);
+    setSelectedIds(newIds);
+    
+    addToast(targetIds.length === 1 ? 'Elemento duplicado' : `${targetIds.length} objetos duplicados`, 'success');
   };
 
-  // Keyboard shortcut binding for Duplicate (Ctrl + D)
+  // Dismiss context menu on mouse click / down outside
   useEffect(() => {
-    const handleDuplicateKey = (e: KeyboardEvent) => {
+    const handleCloseMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.context-menu')) return;
+      setContextMenu((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+    };
+    window.addEventListener('mousedown', handleCloseMenu);
+    return () => window.removeEventListener('mousedown', handleCloseMenu);
+  }, []);
+
+  const handleCopy = (id: string) => {
+    const targetIds = selectedIds.includes(id) ? selectedIds : [id];
+    const copiedObjs = objects.filter((o) => targetIds.includes(o.id));
+    if (copiedObjs.length > 0) {
+      setClipboard(copiedObjs);
+      addToast(`${copiedObjs.length} objeto(s) copiado(s)`, 'info');
+    }
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
+  const handlePaste = (coords: Point) => {
+    if (clipboard.length === 0) return;
+    
+    // Bounding box of copied elements
+    const xs = clipboard.map((o) => o.x);
+    const ys = clipboard.map((o) => o.y);
+    const minClipX = Math.min(...xs);
+    const maxClipX = Math.max(...clipboard.map((o) => o.x + o.width));
+    const minClipY = Math.min(...ys);
+    const maxClipY = Math.max(...clipboard.map((o) => o.y + o.height));
+    
+    const clipW = maxClipX - minClipX;
+    const clipH = maxClipY - minClipY;
+
+    // Center of bounding box is positioned at coords
+    const targetCX = coords.x;
+    const targetCY = coords.y;
+    
+    const deltaX = targetCX - (minClipX + clipW / 2);
+    const deltaY = targetCY - (minClipY + clipH / 2);
+
+    const newObjs: RoomObject[] = [];
+    const newIds: string[] = [];
+
+    clipboard.forEach((o, index) => {
+      const id = `obj-${Date.now()}-${index}`;
+      const count = objects.filter((ob) => ob.type === o.type).length + 1 + index;
+      const baseName = o.name.replace(/\s\d+$/, '').replace(/\s\(Copia\)$/, '');
+      const name = `${baseName} ${count}`;
+
+      let x = Math.round(o.x + deltaX);
+      let y = Math.round(o.y + deltaY);
+
+      const minX = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.x)) : 0;
+      const maxX = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.x)) : 400;
+      const minY = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.y)) : 0;
+      const maxY = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.y)) : 350;
+
+      x = Math.max(minX, Math.min(maxX - o.width, x));
+      y = Math.max(minY, Math.min(maxY - o.height, y));
+
+      newObjs.push({
+        ...o,
+        id,
+        name,
+        x,
+        y,
+        zIndex: objects.length > 0 ? Math.max(...objects.map((ob) => ob.zIndex)) + 1 + index : 1 + index,
+      });
+      newIds.push(id);
+    });
+
+    const nextObjects = [...objects, ...newObjs];
+    setObjects(nextObjects);
+    commitToHistory(roomSettings, nextObjects);
+    setSelectedIds(newIds);
+    addToast(`${newObjs.length} objeto(s) pegado(s)`, 'success');
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
+  const addObjectAt = (type: ObjectType, coords: Point, preset?: { name: string; w: number; h: number; color: string }) => {
+    const id = `obj-${Date.now()}`;
+    const count = objects.filter((o) => o.type === type).length + 1;
+    let name = '';
+    let w = 80;
+    let h = 80;
+    let color = '#6366f1';
+
+    if (preset) {
+      const baseName = preset.name.replace(/\s\d+$/, '');
+      name = `${baseName} ${count}`;
+      w = preset.w;
+      h = preset.h;
+      color = preset.color;
+    } else {
+      const typeLabel =
+        type === 'bed' ? 'Cama' :
+        type === 'nightstand' ? 'Buró' :
+        type === 'dresser' ? 'Tocador' :
+        type === 'stairs' ? 'Escalera' :
+        type === 'box' ? 'Caja' :
+        type === 'door' ? 'Puerta' :
+        type === 'window' ? 'Ventana' :
+        type === 'sofa' ? 'Sofá' :
+        type === 'table' ? 'Escritorio' :
+        type === 'chair' ? 'Silla' :
+        type === 'wardrobe' ? 'Ropero' : 'Nota';
+        
+      name = `${typeLabel} ${count}`;
+
+      switch (type) {
+        case 'bed': w = 140; h = 190; color = '#6366f1'; break;
+        case 'nightstand': w = 50; h = 45; color = '#38bdf8'; break;
+        case 'dresser': w = 120; h = 50; color = '#38bdf8'; break;
+        case 'wardrobe': w = 150; h = 60; color = '#8b5cf6'; break;
+        case 'sofa': w = 180; h = 90; color = '#10b981'; break;
+        case 'table': w = 120; h = 75; color = '#f59e0b'; break;
+        case 'chair': w = 45; h = 45; color = '#f59e0b'; break;
+        case 'stairs': w = 80; h = 200; color = '#a1a1aa'; break;
+        case 'door': w = 80; h = 8; color = '#ef4444'; break;
+        case 'window': w = 120; h = 15; color = '#ec4899'; break;
+        case 'box': w = 50; h = 50; color = '#a1a1aa'; break;
+        case 'text': w = 100; h = 40; color = '#a1a1aa'; break;
+      }
+    }
+
+    let x = Math.round(coords.x - w / 2);
+    let y = Math.round(coords.y - h / 2);
+
+    const minX = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.x)) : 0;
+    const maxX = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.x)) : 400;
+    const minY = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.y)) : 0;
+    const maxY = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.y)) : 350;
+
+    x = Math.max(minX, Math.min(maxX - w, x));
+    y = Math.max(minY, Math.min(maxY - h, y));
+
+    const newObj: RoomObject = {
+      id,
+      type,
+      name,
+      x,
+      y,
+      width: w,
+      height: h,
+      rotation: 0,
+      color,
+      text: type === 'text' ? 'Nota' : undefined,
+      zIndex: objects.length > 0 ? Math.max(...objects.map((o) => o.zIndex)) + 1 : 1,
+    };
+
+    const newObjects = [...objects, newObj];
+    setObjects(newObjects);
+    commitToHistory(roomSettings, newObjects);
+    setSelectedId(id);
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  };
+
+  // Keyboard shortcut bindings for Clipboard actions (Ctrl+C, Ctrl+V, Ctrl+D)
+  useEffect(() => {
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
       if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
 
+      // Ctrl + / opens keyboard shortcuts modal
+      if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+        e.preventDefault();
+        setShowShortcuts(true);
+      }
+
       if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        if (e.key === 'd' || e.key === 'D') {
-          if (selectedId) {
+        if (e.key === 'c' || e.key === 'C') {
+          if (selectedIds.length > 0) {
             e.preventDefault();
-            duplicateObject(selectedId);
+            const copiedObjs = objects.filter((o) => selectedIds.includes(o.id));
+            setClipboard(copiedObjs);
+            addToast(`${copiedObjs.length} objeto(s) copiado(s)`, 'info');
+          }
+        } else if (e.key === 'v' || e.key === 'V') {
+          if (clipboard.length > 0) {
+            e.preventDefault();
+
+            // Shift position slightly for the paste
+            const shift = 20;
+            const deltaX = shift;
+            const deltaY = shift;
+
+            const newObjs: RoomObject[] = [];
+            const newIds: string[] = [];
+
+            clipboard.forEach((o, index) => {
+              const id = `obj-${Date.now()}-${index}`;
+              const count = objects.filter((ob) => ob.type === o.type).length + 1 + index;
+              const baseName = o.name.replace(/\s\d+$/, '').replace(/\s\(Copia\)$/, '');
+              const name = `${baseName} ${count}`;
+
+              let x = Math.round(o.x + deltaX);
+              let y = Math.round(o.y + deltaY);
+
+              const minX = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.x)) : 0;
+              const maxX = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.x)) : 400;
+              const minY = roomSettings.vertices.length > 0 ? Math.min(...roomSettings.vertices.map(v => v.y)) : 0;
+              const maxY = roomSettings.vertices.length > 0 ? Math.max(...roomSettings.vertices.map(v => v.y)) : 350;
+
+              x = Math.max(minX, Math.min(maxX - o.width, x));
+              y = Math.max(minY, Math.min(maxY - o.height, y));
+
+              newObjs.push({
+                ...o,
+                id,
+                name,
+                x,
+                y,
+                zIndex: objects.length > 0 ? Math.max(...objects.map((ob) => ob.zIndex)) + 1 + index : 1 + index,
+              });
+              newIds.push(id);
+            });
+
+            const nextObjects = [...objects, ...newObjs];
+            setObjects(nextObjects);
+            commitToHistory(roomSettings, nextObjects);
+            setSelectedIds(newIds);
+            addToast(`${newObjs.length} objeto(s) pegado(s)`, 'success');
+          }
+        } else if (e.key === 'd' || e.key === 'D') {
+          e.preventDefault(); // Always prevent default bookmarking behavior inside app
+          if (selectedIds.length > 0) {
+            duplicateObject(selectedIds);
+          }
+        }
+      } else if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+        if (e.key === 'r' || e.key === 'R') {
+          if (selectedIds.length === 1) {
+            e.preventDefault();
+            const obj = objects.find((o) => o.id === selectedIds[0]);
+            if (obj) {
+              setModalConfig({
+                isOpen: true,
+                type: 'prompt',
+                title: 'Renombrar Elemento',
+                message: `Ingrese el nuevo nombre para "${obj.name}":`,
+                defaultValue: obj.name,
+                onConfirmPrompt: (newName) => {
+                  const trimmed = newName.trim();
+                  if (trimmed) {
+                    const updated = objects.map((o) => {
+                      if (o.id === obj.id) {
+                        return { ...o, name: trimmed };
+                      }
+                      return o;
+                    });
+                    setObjects(updated);
+                    commitToHistory(roomSettings, updated);
+                    addToast('Elemento renombrado con éxito', 'success');
+                  }
+                },
+              });
+            }
           }
         }
       }
     };
-    window.addEventListener('keydown', handleDuplicateKey);
-    return () => window.removeEventListener('keydown', handleDuplicateKey);
-  }, [selectedId, duplicateObject]);
+    window.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
+  }, [selectedIds, clipboard, objects, roomSettings, duplicateObject]);
 
   // Export JSON
   const exportJSON = () => {
@@ -701,6 +1000,7 @@ export const App: React.FC = () => {
         importJSON={importJSON}
         exportSVG={exportSVG}
         exportPNG={exportPNG}
+        onShowShortcuts={() => setShowShortcuts(true)}
       />
 
       {/* Main workspaces layout */}
@@ -751,6 +1051,8 @@ export const App: React.FC = () => {
           objects={objects}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
           updateObject={updateObject}
           deleteObject={deleteObject}
           gridSettings={gridSettings}
@@ -763,6 +1065,16 @@ export const App: React.FC = () => {
           unit={unit}
           onAlert={triggerAlert}
           onConfirm={triggerConfirm}
+          onContextMenu={(clientX, clientY, targetId, coords) => {
+            setContextMenu({
+              visible: true,
+              x: clientX,
+              y: clientY,
+              targetId,
+              canvasCoords: coords,
+            });
+          }}
+          onShowShortcuts={() => setShowShortcuts(true)}
         />
 
         {/* Right toggle button */}
@@ -800,6 +1112,8 @@ export const App: React.FC = () => {
           objects={objects}
           selectedId={selectedId}
           setSelectedId={setSelectedId}
+          selectedIds={selectedIds}
+          setSelectedIds={setSelectedIds}
           updateObject={updateObject}
           deleteObject={deleteObject}
           duplicateObject={duplicateObject}
@@ -813,9 +1127,234 @@ export const App: React.FC = () => {
 
       {/* Custom Modal overlay */}
       <CustomModal config={modalConfig} onClose={() => setModalConfig({ ...modalConfig, isOpen: false })} />
+      <ShortcutsModal isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
 
       {/* Floating notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+
+      {/* Custom Context Menu */}
+      {contextMenu.visible && (() => {
+        const menuWidth = 220;
+        let menuHeight = 350;
+        if (contextMenu.targetId) {
+          const isMulti = selectedIds.length > 1 && selectedIds.includes(contextMenu.targetId);
+          menuHeight = isMulti ? 210 : 250;
+        }
+        const adjustedX = Math.min(contextMenu.x, window.innerWidth - menuWidth - 10);
+        const adjustedY = Math.min(contextMenu.y, window.innerHeight - menuHeight - 10);
+        return (
+          <div
+            className="context-menu"
+            style={{
+              position: 'fixed',
+              left: `${adjustedX}px`,
+              top: `${adjustedY}px`,
+              zIndex: 10000,
+            }}
+          >
+            {contextMenu.targetId ? (
+              // Object context menu options
+              <>
+                <div className="context-menu-title">
+                  {selectedIds.length > 1 && selectedIds.includes(contextMenu.targetId!)
+                    ? `Selección Múltiple (${selectedIds.length} elementos)`
+                    : (objects.find((o) => o.id === contextMenu.targetId)?.name || 'Objeto')}
+                </div>
+                <button
+                  className="context-menu-item"
+                  onClick={() => handleCopy(contextMenu.targetId!)}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <Copy size={14} style={{ marginRight: '8px' }} /> Copiar
+                  </span>
+                  <span className="context-shortcut">Ctrl+C</span>
+                </button>
+                {!(selectedIds.length > 1 && selectedIds.includes(contextMenu.targetId!)) && (
+                  <button
+                    className="context-menu-item"
+                    onClick={() => {
+                      const obj = objects.find((o) => o.id === contextMenu.targetId);
+                      if (!obj) return;
+                      setContextMenu((prev) => ({ ...prev, visible: false }));
+                      setModalConfig({
+                        isOpen: true,
+                        type: 'prompt',
+                        title: 'Renombrar Elemento',
+                        message: `Ingrese el nuevo nombre para "${obj.name}":`,
+                        defaultValue: obj.name,
+                        onConfirmPrompt: (newName) => {
+                          const trimmed = newName.trim();
+                          if (trimmed) {
+                            const updated = objects.map((o) => {
+                              if (o.id === obj.id) {
+                                return { ...o, name: trimmed };
+                              }
+                              return o;
+                            });
+                            setObjects(updated);
+                            commitToHistory(roomSettings, updated);
+                            addToast('Elemento renombrado con éxito', 'success');
+                          }
+                        },
+                      });
+                    }}
+                  >
+                    <span style={{ display: 'flex', alignItems: 'center' }}>
+                      <Edit3 size={14} style={{ marginRight: '8px' }} /> Renombrar
+                    </span>
+                    <span className="context-shortcut">R</span>
+                  </button>
+                )}
+                <button
+                  className="context-menu-item"
+                  onClick={() => {
+                    const targetIds = selectedIds.includes(contextMenu.targetId!) ? selectedIds : [contextMenu.targetId!];
+                    duplicateObject(targetIds);
+                    setContextMenu((prev) => ({ ...prev, visible: false }));
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <Clipboard size={14} style={{ marginRight: '8px' }} /> Duplicar
+                  </span>
+                  <span className="context-shortcut">Ctrl+D</span>
+                </button>
+                <button
+                  className="context-menu-item context-menu-item-danger"
+                  onClick={() => {
+                    const targetIds = selectedIds.includes(contextMenu.targetId!) ? selectedIds : [contextMenu.targetId!];
+                    deleteObject(targetIds);
+                    setContextMenu((prev) => ({ ...prev, visible: false }));
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <Trash2 size={14} style={{ marginRight: '8px' }} /> Eliminar
+                  </span>
+                  <span className="context-shortcut">Supr</span>
+                </button>
+                <div className="context-menu-divider" />
+                <div className="context-menu-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Palette size={10} /> Cambiar Color
+                </div>
+                <div className="context-menu-colors">
+                  {[
+                    '#6366f1', // Indigo
+                    '#38bdf8', // Sky
+                    '#f59e0b', // Amber
+                    '#8b5cf6', // Purple
+                    '#ef4444', // Red
+                    '#ec4899', // Pink
+                    '#10b981', // Green
+                    '#a1a1aa', // Gray
+                  ].map((color) => (
+                    <button
+                      key={color}
+                      className="context-color-btn"
+                      style={{ backgroundColor: color }}
+                      onClick={() => {
+                        const targetIds = selectedIds.includes(contextMenu.targetId!) ? selectedIds : [contextMenu.targetId!];
+                        const updated = objects.map((obj) => {
+                          if (targetIds.includes(obj.id)) {
+                            return { ...obj, color };
+                          }
+                          return obj;
+                        });
+                        setObjects(updated);
+                        commitToHistory(roomSettings, updated);
+                        setContextMenu((prev) => ({ ...prev, visible: false }));
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              // Background context menu options
+              <>
+                <div className="context-menu-title">Lienzo</div>
+                <button
+                  className="context-menu-item"
+                  disabled={clipboard.length === 0}
+                  style={{ opacity: clipboard.length > 0 ? 1 : 0.5, cursor: clipboard.length > 0 ? 'pointer' : 'not-allowed' }}
+                  onClick={() => handlePaste(contextMenu.canvasCoords)}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <Clipboard size={14} style={{ marginRight: '8px' }} /> Pegar
+                  </span>
+                  <span className="context-shortcut">Ctrl+V</span>
+                </button>
+                <button
+                  className="context-menu-item context-menu-item-danger"
+                  onClick={() => {
+                    clearCanvas();
+                    setContextMenu((prev) => ({ ...prev, visible: false }));
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center' }}>
+                    <Trash2 size={14} style={{ marginRight: '8px' }} /> Vaciar Cuarto
+                  </span>
+                </button>
+                <div className="context-menu-divider" />
+                <div className="context-menu-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Plus size={10} /> Añadir Objeto
+                </div>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('bed', contextMenu.canvasCoords, { name: 'Cama Matrimonial', w: 140, h: 190, color: '#6366f1' })}
+                >
+                  Cama Matrimonial
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('bed', contextMenu.canvasCoords, { name: 'Cama Individual', w: 90, h: 190, color: '#6366f1' })}
+                >
+                  Cama Individual
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('bed', contextMenu.canvasCoords, { name: 'Cama Queen', w: 160, h: 200, color: '#6366f1' })}
+                >
+                  Cama Queen
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('bed', contextMenu.canvasCoords, { name: 'Cama King', w: 200, h: 200, color: '#6366f1' })}
+                >
+                  Cama King
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('table', contextMenu.canvasCoords, { name: 'Escritorio', w: 120, h: 75, color: '#f59e0b' })}
+                >
+                  Mesa / Escritorio
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('sofa', contextMenu.canvasCoords, { name: 'Sofá', w: 180, h: 90, color: '#10b981' })}
+                >
+                  Sofá
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('chair', contextMenu.canvasCoords, { name: 'Silla', w: 45, h: 45, color: '#f59e0b' })}
+                >
+                  Silla
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('wardrobe', contextMenu.canvasCoords, { name: 'Ropero', w: 150, h: 60, color: '#8b5cf6' })}
+                >
+                  Clóset / Ropero
+                </button>
+                <button
+                  className="context-menu-item"
+                  onClick={() => addObjectAt('text', contextMenu.canvasCoords, { name: 'Nota', w: 100, h: 40, color: '#a1a1aa' })}
+                >
+                  Nota
+                </button>
+              </>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 };

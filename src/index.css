@@ -386,6 +386,10 @@ body {
   background-size: 40px 40px, 8px 8px;
   background-position: 0 0, 0 0;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .canvas-wrapper:active {
@@ -1219,14 +1223,7 @@ input[type="number"] {
 }
 
 /* Responsive Header Toolbar Settings */
-@media (max-width: 900px) {
-  .header-toolbar {
-    padding: 0 12px;
-    gap: 8px;
-  }
-  .toolbar-group {
-    gap: 6px;
-  }
+@media (max-width: 1150px) {
   .header-toolbar .btn-text {
     display: none;
   }
@@ -1234,6 +1231,16 @@ input[type="number"] {
     padding: 8px;
     justify-content: center;
     min-width: unset;
+  }
+}
+
+@media (max-width: 900px) {
+  .header-toolbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .toolbar-group {
+    gap: 6px;
   }
   .toolbar-divider {
     margin: 0 2px;
@@ -1244,14 +1251,148 @@ input[type="number"] {
   .header-toolbar {
     height: auto;
     min-height: 64px;
-    padding: 10px 16px;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
   }
   .header-toolbar .logo {
+    justify-content: center;
+    margin-bottom: 4px;
+    width: auto;
+  }
+  .header-toolbar .toolbar-group {
     width: 100%;
     justify-content: center;
-    margin-bottom: 2px;
+    flex-wrap: wrap;
+    gap: 8px;
   }
+  .header-toolbar .toolbar-divider {
+    display: none;
+  }
+}
+
+/* Custom Context Menu */
+.context-menu {
+  width: 220px;
+  background: rgba(17, 24, 39, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  animation: scaleIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.context-menu-title {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 8px 12px 4px 12px;
+}
+
+.context-menu-item {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.context-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-secondary);
+}
+
+.context-menu-item-danger:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.context-shortcut {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-family: monospace;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Floating Keyboard Shortcuts Guide Badge */
+.floating-shortcuts-btn {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  background: rgba(17, 24, 39, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all var(--transition-fast) ease;
+}
+
+.floating-shortcuts-btn:hover {
+  background: rgba(17, 24, 39, 0.9);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: var(--color-secondary);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), 0 0 10px rgba(56, 189, 248, 0.2);
+  transform: translateY(-1px);
+}
+
+.floating-shortcuts-btn code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  margin-left: 6px;
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+
+.context-menu-divider {
+  height: 1px;
+  background: var(--border-thin);
+  margin: 4px 0;
+}
+
+.context-menu-colors {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.context-color-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+}
+
+.context-color-btn:hover {
+  transform: scale(1.15);
+  border-color: #fff;
 }

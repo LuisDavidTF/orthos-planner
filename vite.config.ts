@@ -12,6 +12,7 @@ export default defineConfig({
         editor: resolve(__dirname, 'editor.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
+        shortcuts: resolve(__dirname, 'shortcuts.html'),
       }
     }
   }

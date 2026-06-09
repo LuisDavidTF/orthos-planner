@@ -210,6 +210,12 @@ export const FurnitureSymbol: React.FC<FurnitureSymbolProps> = ({
       // Standard swing: 1/4 arc
       return (
         <g>
+          {/* Transparent click hitbox sector covering the 90-degree swing area */}
+          <path
+            d={`M 0 0 A ${width} ${width} 0 0 1 ${width} ${width} L 0 ${width} Z`}
+            fill="transparent"
+            style={{ cursor: 'move' }}
+          />
           {/* Swing arc */}
           <path
             d={`M 0 0 A ${width} ${width} 0 0 1 ${width} ${width}`}

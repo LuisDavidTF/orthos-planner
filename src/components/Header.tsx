@@ -8,7 +8,8 @@ import {
   Upload,
   Image as ImageIcon,
   Trash2,
-  Maximize
+  Maximize,
+  Keyboard
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -24,6 +25,7 @@ interface HeaderProps {
   importJSON: (e: React.ChangeEvent<HTMLInputElement>) => void;
   exportSVG: () => void;
   exportPNG: () => void;
+  onShowShortcuts: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -39,6 +41,7 @@ export const Header: React.FC<HeaderProps> = ({
   importJSON,
   exportSVG,
   exportPNG,
+  onShowShortcuts,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -96,6 +99,9 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
         <button className="btn-icon" onClick={handleZoomReset} title="Restaurar Vista">
           <Maximize size={16} />
+        </button>
+        <button className="btn-icon" onClick={onShowShortcuts} title="Atajos de Teclado (Ctrl+/)">
+          <Keyboard size={16} />
         </button>
 
         <div className="toolbar-divider" />

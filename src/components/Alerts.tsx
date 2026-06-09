@@ -9,9 +9,11 @@ export interface ToastMessage {
 
 export interface ModalConfig {
   isOpen: boolean;
-  type: 'alert' | 'confirm';
+  type: 'alert' | 'confirm' | 'prompt';
   title: string;
   message: string;
+  defaultValue?: string;
+  onConfirmPrompt?: (value: string) => void;
   onConfirm?: () => void;
   onCancel?: () => void;
 }
@@ -121,10 +123,22 @@ interface CustomModalProps {
 }
 
 export const CustomModal: React.FC<CustomModalProps> = ({ config, onClose }) => {
+  const [inputValue, setInputValue] = React.useState('');
+
+  useEffect(() => {
+    if (config.isOpen) {
+      setInputValue(config.defaultValue || '');
+    }
+  }, [config.isOpen, config.defaultValue]);
+
   if (!config.isOpen) return null;
 
   const handleConfirm = () => {
-    if (config.onConfirm) config.onConfirm();
+    if (config.type === 'prompt') {
+      if (config.onConfirmPrompt) config.onConfirmPrompt(inputValue);
+    } else {
+      if (config.onConfirm) config.onConfirm();
+    }
     onClose();
   };
 
@@ -187,6 +201,35 @@ export const CustomModal: React.FC<CustomModalProps> = ({ config, onClose }) => 
           {config.message}
         </p>
 
+        {/* Input for prompts */}
+        {config.type === 'prompt' && (
+          <input
+            type="text"
+            className="form-input"
+            style={{
+              width: '100%',
+              backgroundColor: 'rgba(5, 7, 12, 0.45)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 'var(--radius-md)',
+              color: 'var(--text-primary)',
+              padding: '8px 12px',
+              fontSize: '0.9rem',
+              outline: 'none',
+              marginTop: '4px',
+            }}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              } else if (e.key === 'Escape') {
+                handleCancel();
+              }
+            }}
+            autoFocus
+          />
+        )}
+
         {/* Actions */}
         <div
           style={{
@@ -196,7 +239,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({ config, onClose }) => 
             marginTop: '8px',
           }}
         >
-          {config.type === 'confirm' && (
+          {(config.type === 'confirm' || config.type === 'prompt') && (
             <button className="btn btn-secondary" onClick={handleCancel}>
               Cancelar
             </button>
@@ -212,7 +255,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({ config, onClose }) => 
                   : undefined,
             }}
           >
-            {config.type === 'confirm' ? 'Confirmar' : 'Aceptar'}
+            {config.type === 'confirm' || config.type === 'prompt' ? 'Confirmar' : 'Aceptar'}
           </button>
         </div>
       </div>

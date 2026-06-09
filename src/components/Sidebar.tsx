@@ -19,12 +19,14 @@ interface SidebarProps {
   roomSettings: RoomSettings;
   setRoomSettings: (settings: RoomSettings) => void;
   objects: RoomObject[];
-  addObject: (type: ObjectType) => void;
+  addObject: (type: ObjectType, preset?: { name: string; w: number; h: number; color: string }) => void;
   selectedId: string | null;
   setSelectedId: (id: string | null) => void;
+  selectedIds: string[];
+  setSelectedIds: (ids: string[]) => void;
   updateObject: (id: string, updates: Partial<RoomObject>) => void;
-  deleteObject: (id: string) => void;
-  duplicateObject: (id: string) => void;
+  deleteObject: (ids: string | string[]) => void;
+  duplicateObject: (ids: string | string[]) => void;
   unit: Unit;
   setUnit: (unit: Unit) => void;
   gridSettings: GridSettings;
@@ -316,7 +318,7 @@ export const LeftSidebar: React.FC<Pick<SidebarProps, 'roomSettings' | 'setRoomS
               <div
                 key={tmpl.name}
                 className="library-item"
-                onClick={() => addObject(tmpl.type)}
+                onClick={() => addObject(tmpl.type, tmpl)}
                 title={`Agregar ${tmpl.name} al lienzo`}
               >
                 <div className="library-item-icon" style={{ borderColor: tmpl.color, color: tmpl.color }}>
@@ -337,6 +339,7 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
   objects,
   selectedId,
   setSelectedId,
+  selectedIds,
   updateObject,
   deleteObject,
   duplicateObject,
@@ -487,7 +490,54 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
       </div>
 
       <div className="sidebar-scroll">
-        {selectedObj ? (
+        {selectedIds && selectedIds.length > 1 ? (
+          /* MULTIPLE SELECTION BULK PROPERTIES */
+          <div className="sidebar-section">
+            <div className="section-title">Selección Múltiple</div>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Hay <strong>{selectedIds.length}</strong> elementos seleccionados. Puedes realizar acciones masivas sobre ellos.
+            </p>
+
+            {/* Color Swatches for all */}
+            <div className="form-group">
+              <label>Color de Selección (Masivo)</label>
+              <div className="color-picker">
+                {COLOR_PALETTE.map((c) => (
+                  <div
+                    key={c}
+                    className="color-option"
+                    style={{ backgroundColor: c, cursor: 'pointer' }}
+                    onClick={() => {
+                      selectedIds.forEach((id) => updateObject(id, { color: c }));
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions: Duplicate Selection / Delete Selection */}
+            <div className="form-group" style={{ marginTop: '20px', gap: '8px' }}>
+              <button
+                className="btn btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => {
+                  duplicateObject(selectedIds);
+                }}
+              >
+                <Copy size={16} /> Duplicar Selección
+              </button>
+              <button
+                className="btn btn-danger"
+                style={{ width: '100%', marginTop: '8px' }}
+                onClick={() => {
+                  deleteObject(selectedIds);
+                }}
+              >
+                <Trash2 size={16} /> Eliminar Selección
+              </button>
+            </div>
+          </div>
+        ) : selectedObj ? (
           /* PROPERTIES PANEL */
           <div className="sidebar-section">
             <div className="section-title">Propiedades del Elemento</div>
