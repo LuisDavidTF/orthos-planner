@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import type { RoomObject, RoomSettings, GridSettings, Unit, Point } from '../types';
 import { FurnitureSymbol } from './FurnitureSymbols';
 import { Keyboard } from 'lucide-react';
+import { getObjectCorners } from '../utils/layoutMath';
 
 interface CanvasProps {
   roomSettings: RoomSettings;
@@ -25,33 +26,11 @@ interface CanvasProps {
   onConfirm: (title: string, message: string, onConfirm: () => void) => void;
   onContextMenu: (clientX: number, clientY: number, targetId: string | null, canvasCoords: Point) => void;
   onShowShortcuts: () => void;
+  showCirculationPaths?: boolean;
+  showLightHeatmap?: boolean;
+  orientation?: 'N' | 'S' | 'E' | 'W';
+  setOrientation?: (val: 'N' | 'S' | 'E' | 'W') => void;
 }
-
-const getObjectCorners = (obj: RoomObject): Point[] => {
-  const cx = obj.x + obj.width / 2;
-  const cy = obj.y + obj.height / 2;
-  const theta = (obj.rotation * Math.PI) / 180;
-  
-  const halfW = obj.width / 2;
-  const halfH = obj.height / 2;
-  
-  const localCorners = obj.type === 'door' ? [
-    { x: -halfW, y: -halfH },           // Top-left
-    { x: halfW, y: -halfH },            // Top-right
-    { x: halfW, y: obj.width - halfH }, // Bottom-right (swing arc extends to obj.width)
-    { x: -halfW, y: obj.width - halfH },// Bottom-left (swing arc extends to obj.width)
-  ] : [
-    { x: -halfW, y: -halfH }, // Top-left
-    { x: halfW, y: -halfH },  // Top-right
-    { x: halfW, y: halfH },   // Bottom-right
-    { x: -halfW, y: halfH },  // Bottom-left
-  ];
-  
-  return localCorners.map((pt) => ({
-    x: cx + pt.x * Math.cos(theta) - pt.y * Math.sin(theta),
-    y: cy + pt.x * Math.sin(theta) + pt.y * Math.cos(theta),
-  }));
-};
 
 export const Canvas: React.FC<CanvasProps> = ({
   roomSettings,
@@ -75,6 +54,10 @@ export const Canvas: React.FC<CanvasProps> = ({
   onConfirm,
   onContextMenu,
   onShowShortcuts,
+  showCirculationPaths = false,
+  showLightHeatmap = false,
+  orientation = 'N',
+  setOrientation,
 }) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [wrapperSize, setWrapperSize] = useState({ width: 800, height: 600 });
@@ -997,6 +980,13 @@ export const Canvas: React.FC<CanvasProps> = ({
           transform: `translate(${offsetX - (wrapperSize.width - roomW) / 2}px, ${offsetY - (wrapperSize.height - roomH) / 2}px)`,
         }}
       >
+        <defs>
+          <linearGradient id="window-light-gradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.22" />
+            <stop offset="35%" stopColor="#fbbf24" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+          </linearGradient>
+        </defs>
         {/* Render scaled and offset floor plan contents */}
         <g transform={`scale(${renderScale}) translate(${-minX}, ${-minY})`}>
           
@@ -1010,6 +1000,129 @@ export const Canvas: React.FC<CanvasProps> = ({
 
           {/* Grid line overlay */}
           {renderGridLines()}
+
+          {/* Windows Sunlight Heatmap Overlay */}
+          {showLightHeatmap && (
+            <g style={{ pointerEvents: 'none' }}>
+              {objects
+                .filter((o) => o.type === 'window')
+                .map((win) => {
+                  const cx = win.x + win.width / 2;
+                  const cy = win.y + win.height / 2;
+                  // Render solar beam expanding outwards in local coordinates
+                  return (
+                    <g key={`light-${win.id}`} transform={`translate(${cx}, ${cy}) rotate(${win.rotation})`}>
+                      <polygon
+                        points={`${-win.width / 2},${win.height / 2} ${win.width / 2},${win.height / 2} ${win.width / 2 + 25},${win.height / 2 + 180} ${-win.width / 2 - 25},${win.height / 2 + 180}`}
+                        fill="url(#window-light-gradient)"
+                      />
+                    </g>
+                  );
+                })}
+            </g>
+          )}
+
+          {/* Circulation Corridors & Clearance Paths Overlay */}
+          {showCirculationPaths && (
+            <g style={{ pointerEvents: 'none' }}>
+              {objects.map((obj) => {
+                const cx = obj.x + obj.width / 2;
+                const cy = obj.y + obj.height / 2;
+                const w = obj.width;
+                const h = obj.height;
+
+                return (
+                  <g key={`path-${obj.id}`} transform={`translate(${cx}, ${cy}) rotate(${obj.rotation})`}>
+                    {obj.type === 'door' && (
+                      <rect
+                        x={-w / 2}
+                        y={h / 2}
+                        width={w}
+                        height={100}
+                        fill="rgba(16, 185, 129, 0.08)"
+                        stroke="rgba(16, 185, 129, 0.22)"
+                        strokeWidth={1.5 / renderScale}
+                        strokeDasharray="4 4"
+                      />
+                    )}
+                    {obj.type === 'stairs' && (
+                      <>
+                        <rect
+                          x={-w / 2}
+                          y={-h / 2 - 80}
+                          width={w}
+                          height={80}
+                          fill="rgba(245, 158, 11, 0.08)"
+                          stroke="rgba(245, 158, 11, 0.22)"
+                          strokeWidth={1.5 / renderScale}
+                          strokeDasharray="4 4"
+                        />
+                        <rect
+                          x={-w / 2}
+                          y={h / 2}
+                          width={w}
+                          height={80}
+                          fill="rgba(245, 158, 11, 0.08)"
+                          stroke="rgba(245, 158, 11, 0.22)"
+                          strokeWidth={1.5 / renderScale}
+                          strokeDasharray="4 4"
+                        />
+                      </>
+                    )}
+                    {(obj.type === 'wardrobe' || obj.type === 'dresser') && (
+                      <rect
+                        x={-w / 2}
+                        y={h / 2}
+                        width={w}
+                        height={60}
+                        fill="rgba(14, 165, 233, 0.08)"
+                        stroke="rgba(14, 165, 233, 0.22)"
+                        strokeWidth={1.5 / renderScale}
+                        strokeDasharray="4 4"
+                      />
+                    )}
+                    {obj.type === 'bed' && (
+                      <>
+                        {/* Left clearance */}
+                        <rect
+                          x={-w / 2 - 50}
+                          y={-h / 2 + 60}
+                          width={50}
+                          height={h - 60}
+                          fill="rgba(99, 102, 241, 0.05)"
+                          stroke="rgba(99, 102, 241, 0.18)"
+                          strokeWidth={1.2 / renderScale}
+                          strokeDasharray="3 3"
+                        />
+                        {/* Right clearance */}
+                        <rect
+                          x={w / 2}
+                          y={-h / 2 + 60}
+                          width={50}
+                          height={h - 60}
+                          fill="rgba(99, 102, 241, 0.05)"
+                          stroke="rgba(99, 102, 241, 0.18)"
+                          strokeWidth={1.2 / renderScale}
+                          strokeDasharray="3 3"
+                        />
+                        {/* Foot clearance */}
+                        <rect
+                          x={-w / 2}
+                          y={h / 2}
+                          width={w}
+                          height={50}
+                          fill="rgba(99, 102, 241, 0.05)"
+                          stroke="rgba(99, 102, 241, 0.18)"
+                          strokeWidth={1.2 / renderScale}
+                          strokeDasharray="3 3"
+                        />
+                      </>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          )}
 
           {/* Room perimeter polygon dashed backdrop border */}
           <polygon
@@ -1299,6 +1412,48 @@ export const Canvas: React.FC<CanvasProps> = ({
       {/* Floating Canvas controls tooltips */}
       <div className="canvas-tooltip">
         <span>Esquinas Blancas</span> para ajustar paredes • <span>Botones (+)</span> para añadir esquinas • <span>Doble click esquina</span> para eliminarla
+      </div>
+
+      {/* Compass Rose (Premium Feature) */}
+      <div
+        className="compass-container"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (setOrientation && orientation) {
+            const cycle: Record<'N' | 'E' | 'S' | 'W', 'N' | 'E' | 'S' | 'W'> = {
+              'N': 'E',
+              'E': 'S',
+              'S': 'W',
+              'W': 'N'
+            };
+            setOrientation(cycle[orientation]);
+          }
+        }}
+        style={{
+          transform: `rotate(${
+            orientation === 'N' ? 0 :
+            orientation === 'E' ? 90 :
+            orientation === 'S' ? 180 :
+            orientation === 'W' ? 270 : 0
+          }deg)`
+        }}
+        title={`Orientación de la habitación: ${
+          orientation === 'N' ? 'Norte' :
+          orientation === 'E' ? 'Este' :
+          orientation === 'S' ? 'Sur' :
+          orientation === 'W' ? 'Oeste' : ''
+        } (Haz click para rotar)`}
+      >
+        <div className="compass-outer">
+          <span className="compass-label n">N</span>
+          <span className="compass-label s">S</span>
+          <span className="compass-label e">E</span>
+          <span className="compass-label w">O</span>
+          <div className="compass-needle">
+            <div className="compass-needle-north" />
+            <div className="compass-needle-south" />
+          </div>
+        </div>
       </div>
 
       {/* Floating Keyboard Shortcuts Guide Button */}

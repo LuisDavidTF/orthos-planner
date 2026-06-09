@@ -12,8 +12,14 @@ import {
   Trash2,
   Copy,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Sparkles,
+  Compass,
+  AlertTriangle,
+  CheckCircle,
+  Info
 } from 'lucide-react';
+import { evaluateLayout } from '../utils/layoutOptimizer';
 
 interface SidebarProps {
   roomSettings: RoomSettings;
@@ -32,6 +38,16 @@ interface SidebarProps {
   gridSettings: GridSettings;
   setGridSettings: (settings: GridSettings) => void;
   isOpen: boolean;
+  showCirculationPaths?: boolean;
+  setShowCirculationPaths?: (val: boolean) => void;
+  showLightHeatmap?: boolean;
+  setShowLightHeatmap?: (val: boolean) => void;
+  orientation?: 'N' | 'S' | 'E' | 'W';
+  setOrientation?: (val: 'N' | 'S' | 'E' | 'W') => void;
+  optimizationProfile?: 'space' | 'sleep' | 'work';
+  setOptimizationProfile?: (val: 'space' | 'sleep' | 'work') => void;
+  onOptimizeLayout?: () => void;
+  isOptimizing?: boolean;
 }
 
 const COLOR_PALETTE = [
@@ -347,8 +363,20 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
   gridSettings,
   setGridSettings,
   isOpen,
+  showCirculationPaths = false,
+  setShowCirculationPaths,
+  showLightHeatmap = false,
+  setShowLightHeatmap,
+  orientation = 'N',
+  setOrientation,
+  optimizationProfile = 'space',
+  setOptimizationProfile,
+  onOptimizeLayout: _onOptimizeLayout,
+  isOptimizing: _isOptimizing = false,
 }) => {
   const selectedObj = objects.find((o) => o.id === selectedId);
+  const { scores, diagnostics } = evaluateLayout(objects, roomSettings, orientation);
+  const [activeTab, setActiveTab] = React.useState<'inspector' | 'optimizer'>('optimizer');
 
   // Unit conversion helpers
   const toUnitValue = (cmVal: number) => {
@@ -485,320 +513,512 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
 
   return (
     <aside id="right-sidebar" className={`sidebar right-sidebar ${isOpen ? '' : 'collapsed'}`} aria-hidden={!isOpen}>
-      <div className="sidebar-header">
-        <h2>🛠️ Inspector</h2>
+      <div className="sidebar-header" style={{ flexDirection: 'column', gap: '10px', alignItems: 'stretch', paddingBottom: '0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>🛠️ Inspector</h2>
+        </div>
+        <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border-thin)', paddingBottom: '8px' }}>
+          <button
+            className="btn btn-secondary"
+            style={{
+              flex: 1,
+              padding: '6px 0',
+              fontSize: '0.78rem',
+              background: activeTab === 'optimizer' ? 'rgba(168, 85, 247, 0.15)' : 'transparent',
+              borderColor: activeTab === 'optimizer' ? '#a855f7' : 'transparent',
+              color: activeTab === 'optimizer' ? '#c084fc' : 'var(--text-secondary)',
+            }}
+            onClick={() => setActiveTab('optimizer')}
+          >
+            ✨ Optimizar
+          </button>
+          <button
+            className="btn btn-secondary"
+            style={{
+              flex: 1,
+              padding: '6px 0',
+              fontSize: '0.78rem',
+              background: activeTab === 'inspector' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+              borderColor: activeTab === 'inspector' ? '#6366f1' : 'transparent',
+              color: activeTab === 'inspector' ? '#a5b4fc' : 'var(--text-secondary)',
+            }}
+            onClick={() => setActiveTab('inspector')}
+          >
+            📋 Propiedades
+          </button>
+        </div>
       </div>
 
       <div className="sidebar-scroll">
-        {selectedIds && selectedIds.length > 1 ? (
-          /* MULTIPLE SELECTION BULK PROPERTIES */
-          <div className="sidebar-section">
-            <div className="section-title">Selección Múltiple</div>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              Hay <strong>{selectedIds.length}</strong> elementos seleccionados. Puedes realizar acciones masivas sobre ellos.
-            </p>
-
-            {/* Color Swatches for all */}
-            <div className="form-group">
-              <label>Color de Selección (Masivo)</label>
-              <div className="color-picker">
-                {COLOR_PALETTE.map((c) => (
-                  <div
-                    key={c}
-                    className="color-option"
-                    style={{ backgroundColor: c, cursor: 'pointer' }}
-                    onClick={() => {
-                      selectedIds.forEach((id) => updateObject(id, { color: c }));
-                    }}
-                  />
-                ))}
-              </div>
+        {activeTab === 'optimizer' ? (
+          /* ✨ PREMIUM OPTIMIZER PANEL */
+          <div className="premium-card" style={{ background: 'transparent', border: 'none', padding: '0', boxShadow: 'none', backdropFilter: 'none' }}>
+            <div className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#a855f7', fontWeight: 800, marginBottom: '10px' }}>
+              <Sparkles size={14} /> Distribución Premium
             </div>
 
-            {/* Actions: Duplicate Selection / Delete Selection */}
-            <div className="form-group" style={{ marginTop: '20px', gap: '8px' }}>
-              <button
-                className="btn btn-secondary"
-                style={{ width: '100%' }}
-                onClick={() => {
-                  duplicateObject(selectedIds);
-                }}
-              >
-                <Copy size={16} /> Duplicar Selección
-              </button>
-              <button
-                className="btn btn-danger"
-                style={{ width: '100%', marginTop: '8px' }}
-                onClick={() => {
-                  deleteObject(selectedIds);
-                }}
-              >
-                <Trash2 size={16} /> Eliminar Selección
-              </button>
-            </div>
-          </div>
-        ) : selectedObj ? (
-          /* PROPERTIES PANEL */
-          <div className="sidebar-section">
-            <div className="section-title">Propiedades del Elemento</div>
-            
-            {/* Edit Label Name */}
-            <div className="form-group">
-              <label>Nombre del Elemento</label>
-              <input
-                type="text"
-                className="form-input"
-                value={selectedObj.name}
-                onChange={(e) => handlePropChange('name', e.target.value)}
-              />
-            </div>
-
-            {/* Custom text label - only for text notes */}
-            {selectedObj.type === 'text' && (
-              <div className="form-group">
-                <label>Contenido del Texto</label>
-                <textarea
-                  className="form-textarea"
-                  value={selectedObj.text || ''}
-                  onChange={(e) => handlePropChange('text', e.target.value)}
+            {/* Circular Space Efficiency Gauge */}
+            <div className="gauge-wrapper">
+              <svg className="gauge-svg" width="90" height="90">
+                <circle className="gauge-bg" cx="45" cy="45" r="38" />
+                <circle
+                  className="gauge-fill"
+                  cx="45"
+                  cy="45"
+                  r="38"
+                  strokeDasharray={2 * Math.PI * 38}
+                  strokeDashoffset={2 * Math.PI * 38 * (1 - scores.overall / 100)}
                 />
-              </div>
-            )}
-
-            {/* Width and Depth */}
-            <div className="form-group">
-              <label>Ancho (Horizontal)</label>
-              <div className="input-with-unit">
-                <input
-                  type="number"
-                  className="form-input"
-                  value={localWidth}
-                  onChange={(e) => handleWidthChange(e.target.value)}
-                  onBlur={handleWidthBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleWidthBlur();
-                    }
-                  }}
-                />
-                <span className="input-unit">{unit}</span>
+                <defs>
+                  <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="50%" stopColor="#a855f7" />
+                    <stop offset="100%" stopColor="#38bdf8" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="gauge-center-text">
+                <span className="gauge-percent">{scores.overall}%</span>
+                <span className="gauge-label">Eficiencia</span>
               </div>
             </div>
 
-            <div className="form-group">
-              <label>Largo / Profundidad (Vertical)</label>
-              <div className="input-with-unit">
-                <input
-                  type="number"
-                  className="form-input"
-                  value={localHeight}
-                  onChange={(e) => handleHeightChange(e.target.value)}
-                  onBlur={handleHeightBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleHeightBlur();
-                    }
-                  }}
-                />
-                <span className="input-unit">{unit}</span>
-              </div>
-            </div>
-
-            {/* Rotation Angle */}
-            <div className="form-group">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label>Rotación</label>
-                <span style={{ fontSize: '0.78rem', color: 'var(--color-secondary)', fontWeight: 600 }}>
-                  {selectedObj.rotation}°
+            {/* Breakdown details */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', borderBottom: '1px solid var(--border-thin)', paddingBottom: '12px', marginBottom: '12px' }}>
+              <div className="subscore-row">
+                <span>Pasillos y Flujo</span>
+                <span className="subscore-value" style={{ color: scores.circulation > 75 ? '#34d399' : scores.circulation > 45 ? '#fbbf24' : '#f87171' }}>
+                  {scores.circulation}/100
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input
-                  type="range"
-                  className="form-range"
-                  min="0"
-                  max="359"
-                  value={selectedObj.rotation}
-                  style={{ flex: 1 }}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    handlePropChange('rotation', val);
-                    setLocalRotation(val.toString());
-                  }}
-                />
-                <input
-                  type="number"
-                  className="form-input"
-                  value={localRotation}
-                  style={{ width: '70px', padding: '8px' }}
-                  onChange={(e) => handleRotationChange(e.target.value)}
-                  onBlur={handleRotationBlur}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleRotationBlur();
-                    }
-                  }}
-                />
+              <div className="subscore-row">
+                <span>Luz y Ventanas</span>
+                <span className="subscore-value" style={{ color: scores.lighting > 75 ? '#34d399' : scores.lighting > 45 ? '#fbbf24' : '#f87171' }}>
+                  {scores.lighting}/100
+                </span>
+              </div>
+              <div className="subscore-row">
+                <span>Orden y Muros</span>
+                <span className="subscore-value" style={{ color: scores.distribution > 75 ? '#34d399' : scores.distribution > 45 ? '#fbbf24' : '#f87171' }}>
+                  {scores.distribution}/100
+                </span>
               </div>
             </div>
 
-            {/* Layer Ordering (zIndex) */}
-            <div className="form-group">
-              <label>Orden de Capas (Z-Index: {selectedObj.zIndex})</label>
-              <div className="btn-group-2">
-                <button className="btn btn-secondary" onClick={() => adjustZIndex('up')} title="Traer al frente">
-                  <ChevronUp size={16} /> Subir
-                </button>
-                <button className="btn btn-secondary" onClick={() => adjustZIndex('down')} title="Enviar al fondo">
-                  <ChevronDown size={16} /> Bajar
-                </button>
-              </div>
-            </div>
-
-            {/* Color Swatches */}
-            <div className="form-group">
-              <label>Color en Plano</label>
-              <div className="color-picker">
-                {COLOR_PALETTE.map((c) => (
-                  <div
-                    key={c}
-                    className={`color-option ${selectedObj.color === c ? 'active' : ''}`}
-                    style={{ backgroundColor: c }}
-                    onClick={() => handlePropChange('color', c)}
-                  />
+            {/* Room Orientation Selector */}
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Compass size={12} /> Orientación de Ventanas (Sol)
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
+                {(['N', 'E', 'S', 'W'] as const).map((dir) => (
+                  <button
+                    key={dir}
+                    className={`btn btn-secondary btn-icon ${orientation === dir ? 'active' : ''}`}
+                    style={{ padding: '6px 0', fontSize: '0.75rem', height: '28px' }}
+                    onClick={() => setOrientation && setOrientation(dir)}
+                    title={`El sol saldrá por el ${dir === 'N' ? 'Norte' : dir === 'E' ? 'Este (amanecer)' : dir === 'S' ? 'Sur' : 'Oeste'}`}
+                  >
+                    {dir === 'N' ? 'N' : dir === 'E' ? 'E' : dir === 'S' ? 'S' : 'O'}
+                  </button>
                 ))}
               </div>
             </div>
 
-            {/* Actions: Duplicate / Delete */}
-            <div className="form-group" style={{ marginTop: '10px', gap: '8px' }}>
-            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => selectedId && duplicateObject(selectedId)}>
-              <Copy size={16} /> Duplicar Elemento
-            </button>
-            <button
-              className="btn btn-danger"
-              style={{ width: '100%' }}
-              onClick={() => {
-                if (selectedId) {
-                  deleteObject(selectedId);
-                  setSelectedId(null);
-                }
-              }}
-            >
-              <Trash2 size={16} /> Eliminar Elemento
-            </button>
+            {/* Overlays Visibility Switches */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', borderBottom: '1px solid var(--border-thin)', paddingBottom: '12px', marginBottom: '12px' }}>
+              <div className="switch-row">
+                <span>Ver Flujo de Pasillos</span>
+                <div className="switch-container">
+                  <input
+                    type="checkbox"
+                    checked={showCirculationPaths}
+                    onChange={(e) => setShowCirculationPaths && setShowCirculationPaths(e.target.checked)}
+                  />
+                  <span className="switch-slider" />
+                </div>
+              </div>
+              <div className="switch-row">
+                <span>Ver Haz de Luz Solar</span>
+                <div className="switch-container">
+                  <input
+                    type="checkbox"
+                    checked={showLightHeatmap}
+                    onChange={(e) => setShowLightHeatmap && setShowLightHeatmap(e.target.checked)}
+                  />
+                  <span className="switch-slider" />
+                </div>
+              </div>
+            </div>
+
+            {/* Diagnostic Checklist */}
+            <div className="form-group" style={{ marginBottom: '12px' }}>
+              <label>Diagnóstico en Tiempo Real</label>
+              <div className="diag-list">
+                {diagnostics.length === 0 ? (
+                  <div className="diag-item info">
+                    <Info size={14} style={{ flexShrink: 0 }} />
+                    Coloca muebles para analizar la circulación e iluminación natural.
+                  </div>
+                ) : (
+                  diagnostics.map((diag) => (
+                    <div key={diag.id} className={`diag-item ${diag.type}`}>
+                      {diag.type === 'error' && <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '2px' }} />}
+                      {diag.type === 'warning' && <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '2px' }} />}
+                      {diag.type === 'success' && <CheckCircle size={14} style={{ flexShrink: 0, marginTop: '2px' }} />}
+                      {diag.type === 'info' && <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />}
+                      <span>{diag.text}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Profile Selection — button temporarily hidden, panel is used for live suggestions */}
+            <div className="form-group" style={{ marginTop: '4px' }}>
+              <label>Perfil de Sugerencia</label>
+              <select
+                value={optimizationProfile}
+                onChange={(e) => setOptimizationProfile && setOptimizationProfile(e.target.value as any)}
+                className="form-select"
+                style={{ marginBottom: '8px' }}
+              >
+                <option value="space">Maximizar Espacio Libre</option>
+                <option value="sleep">Optimizado para el Descanso</option>
+                <option value="work">Optimizado para Trabajo / Estudio</option>
+              </select>
+
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '8px',
+                padding: '10px',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'rgba(99, 102, 241, 0.07)',
+                border: '1px solid rgba(99, 102, 241, 0.18)',
+                color: '#a5b4fc',
+                fontSize: '0.78rem',
+                lineHeight: '1.5',
+              }}>
+                <Info size={14} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span>El diagnóstico en tiempo real te indica cómo mejorar tu distribución. El botón de auto-acomodo automático estará disponible próximamente.</span>
+              </div>
             </div>
           </div>
         ) : (
-          /* NO OBJECT SELECTED DEFAULT SIDEBAR PANELS */
+          /* INSPECTOR TAB: ORIGINAL SELECTION/DEFAULT RENDERING */
           <>
-            {/* Grid and Snapping Settings */}
-            <div className="sidebar-section">
-              <div className="section-title">Rejilla y Ajustes</div>
-              <div className="form-group">
-                <label className="switch-label">
-                  <span>Mostrar Rejilla</span>
-                  <div className="switch-container">
-                    <input
-                      type="checkbox"
-                      checked={gridSettings.showGrid}
-                      onChange={(e) => setGridSettings({ ...gridSettings, showGrid: e.target.checked })}
-                    />
-                    <span className="switch-slider" />
-                  </div>
-                </label>
-              </div>
-              <div className="form-group">
-                <label className="switch-label">
-                  <span>Ajustar a la Rejilla</span>
-                  <div className="switch-container">
-                    <input
-                      type="checkbox"
-                      checked={gridSettings.snapToGrid}
-                      onChange={(e) => setGridSettings({ ...gridSettings, snapToGrid: e.target.checked })}
-                    />
-                    <span className="switch-slider" />
-                  </div>
-                </label>
-              </div>
-              {gridSettings.snapToGrid && (
+            {selectedIds && selectedIds.length > 1 ? (
+              /* MULTIPLE SELECTION BULK PROPERTIES */
+              <div className="sidebar-section">
+                <div className="section-title">Selección Múltiple</div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+                  Hay <strong>{selectedIds.length}</strong> elementos seleccionados. Puedes realizar acciones masivas sobre ellos.
+                </p>
+
+                {/* Color Swatches for all */}
                 <div className="form-group">
-                  <label>Tamaño de Ajuste (cm)</label>
-                  <select
-                    value={gridSettings.snapSize}
-                    onChange={(e) => setGridSettings({ ...gridSettings, snapSize: parseInt(e.target.value) })}
-                    className="form-select"
+                  <label>Color de Selección (Masivo)</label>
+                  <div className="color-picker">
+                    {COLOR_PALETTE.map((c) => (
+                      <div
+                        key={c}
+                        className="color-option"
+                        style={{ backgroundColor: c, cursor: 'pointer' }}
+                        onClick={() => {
+                          selectedIds.forEach((id) => updateObject(id, { color: c }));
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions: Duplicate Selection / Delete Selection */}
+                <div className="form-group" style={{ marginTop: '20px', gap: '8px' }}>
+                  <button
+                    className="btn btn-secondary"
+                    style={{ width: '100%' }}
+                    onClick={() => {
+                      duplicateObject(selectedIds);
+                    }}
                   >
-                    <option value="5">5 cm</option>
-                    <option value="10">10 cm</option>
-                    <option value="20">20 cm</option>
-                    <option value="50">50 cm</option>
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Bill of Materials list */}
-            <div className="sidebar-section">
-              <div className="section-title">Lista de Mobiliario ({objects.length})</div>
-              {objects.length === 0 ? (
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
-                  No hay muebles colocados.
-                </div>
-              ) : (
-                <div className="bom-list">
-                  {objects.map((obj) => (
-                    <div
-                      key={obj.id}
-                      className="bom-item"
-                      style={{ cursor: 'pointer', borderColor: selectedId === obj.id ? 'var(--color-primary)' : 'var(--border-thin)' }}
-                      onClick={() => setSelectedId(obj.id)}
-                    >
-                      <div className="bom-item-info">
-                        <span className="bom-item-name">{obj.name}</span>
-                        <span className="bom-item-dims">
-                          {toUnitValue(obj.width)}x{toUnitValue(obj.height)} {unit}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: obj.color, fontWeight: 'bold' }}>
-                        {obj.type.toUpperCase()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Keyboard Shortcuts guide */}
-            <div className="sidebar-section">
-              <div className="section-title">Atajos de Teclado</div>
-              <div className="keyboard-shortcuts-list">
-                <div className="shortcut-row">
-                  <span>Mover item</span>
-                  <span className="shortcut-key">↑ ↓ ← →</span>
-                </div>
-                <div className="shortcut-row">
-                  <span>Mover rápido (10cm)</span>
-                  <span className="shortcut-key">Shift + Flechas</span>
-                </div>
-                <div className="shortcut-row">
-                  <span>Eliminar item</span>
-                  <span className="shortcut-key">Supr / Backspace</span>
-                </div>
-                <div className="shortcut-row">
-                  <span>Deseleccionar</span>
-                  <span className="shortcut-key">Esc</span>
-                </div>
-                <div className="shortcut-row">
-                  <span>Deshacer / Rehacer</span>
-                  <span className="shortcut-key">Ctrl+Z / Ctrl+Y</span>
-                </div>
-                <div className="shortcut-row">
-                  <span>Duplicar item</span>
-                  <span className="shortcut-key">Ctrl+D</span>
+                    <Copy size={16} /> Duplicar Selección
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    style={{ width: '100%', marginTop: '8px' }}
+                    onClick={() => {
+                      deleteObject(selectedIds);
+                    }}
+                  >
+                    <Trash2 size={16} /> Eliminar Selección
+                  </button>
                 </div>
               </div>
-            </div>
+            ) : selectedObj ? (
+              /* PROPERTIES PANEL */
+              <div className="sidebar-section">
+                <div className="section-title">Propiedades del Elemento</div>
+                
+                {/* Edit Label Name */}
+                <div className="form-group">
+                  <label>Nombre del Elemento</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={selectedObj.name}
+                    onChange={(e) => handlePropChange('name', e.target.value)}
+                  />
+                </div>
+
+                {/* Custom text label - only for text notes */}
+                {selectedObj.type === 'text' && (
+                  <div className="form-group">
+                    <label>Contenido del Texto</label>
+                    <textarea
+                      className="form-textarea"
+                      value={selectedObj.text || ''}
+                      onChange={(e) => handlePropChange('text', e.target.value)}
+                    />
+                  </div>
+                )}
+
+                {/* Width and Depth */}
+                <div className="form-group">
+                  <label>Ancho (Horizontal)</label>
+                  <div className="input-with-unit">
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={localWidth}
+                      onChange={(e) => handleWidthChange(e.target.value)}
+                      onBlur={handleWidthBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleWidthBlur();
+                        }
+                      }}
+                    />
+                    <span className="input-unit">{unit}</span>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Largo / Profundidad (Vertical)</label>
+                  <div className="input-with-unit">
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={localHeight}
+                      onChange={(e) => handleHeightChange(e.target.value)}
+                      onBlur={handleHeightBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleHeightBlur();
+                        }
+                      }}
+                    />
+                    <span className="input-unit">{unit}</span>
+                  </div>
+                </div>
+
+                {/* Rotation Angle */}
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label>Rotación</label>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--color-secondary)', fontWeight: 600 }}>
+                      {selectedObj.rotation}°
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <input
+                      type="range"
+                      className="form-range"
+                      min="0"
+                      max="359"
+                      value={selectedObj.rotation}
+                      style={{ flex: 1 }}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        handlePropChange('rotation', val);
+                        setLocalRotation(val.toString());
+                      }}
+                    />
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={localRotation}
+                      style={{ width: '70px', padding: '8px' }}
+                      onChange={(e) => handleRotationChange(e.target.value)}
+                      onBlur={handleRotationBlur}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleRotationBlur();
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Layer Ordering (zIndex) */}
+                <div className="form-group">
+                  <label>Orden de Capas (Z-Index: {selectedObj.zIndex})</label>
+                  <div className="btn-group-2">
+                    <button className="btn btn-secondary" onClick={() => adjustZIndex('up')} title="Traer al frente">
+                      <ChevronUp size={16} /> Subir
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => adjustZIndex('down')} title="Enviar al fondo">
+                      <ChevronDown size={16} /> Bajar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Color Swatches */}
+                <div className="form-group">
+                  <label>Color en Plano</label>
+                  <div className="color-picker">
+                    {COLOR_PALETTE.map((c) => (
+                      <div
+                        key={c}
+                        className={`color-option ${selectedObj.color === c ? 'active' : ''}`}
+                        style={{ backgroundColor: c }}
+                        onClick={() => handlePropChange('color', c)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Actions: Duplicate / Delete */}
+                <div className="form-group" style={{ marginTop: '10px', gap: '8px' }}>
+                  <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => selectedId && duplicateObject(selectedId)}>
+                    <Copy size={16} /> Duplicar Elemento
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    style={{ width: '100%' }}
+                    onClick={() => {
+                      if (selectedId) {
+                        deleteObject(selectedId);
+                        setSelectedId(null);
+                      }
+                    }}
+                  >
+                    <Trash2 size={16} /> Eliminar Elemento
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* NO SELECTION: GRID + BOM + SHORTCUTS */
+              <>
+                {/* Grid and Snapping Settings */}
+                <div className="sidebar-section">
+                  <div className="section-title">Rejilla y Ajustes</div>
+                  <div className="form-group">
+                    <label className="switch-label">
+                      <span>Mostrar Rejilla</span>
+                      <div className="switch-container">
+                        <input
+                          type="checkbox"
+                          checked={gridSettings.showGrid}
+                          onChange={(e) => setGridSettings({ ...gridSettings, showGrid: e.target.checked })}
+                        />
+                        <span className="switch-slider" />
+                      </div>
+                    </label>
+                  </div>
+                  <div className="form-group">
+                    <label className="switch-label">
+                      <span>Ajustar a la Rejilla</span>
+                      <div className="switch-container">
+                        <input
+                          type="checkbox"
+                          checked={gridSettings.snapToGrid}
+                          onChange={(e) => setGridSettings({ ...gridSettings, snapToGrid: e.target.checked })}
+                        />
+                        <span className="switch-slider" />
+                      </div>
+                    </label>
+                  </div>
+                  {gridSettings.snapToGrid && (
+                    <div className="form-group">
+                      <label>Tamaño de Ajuste (cm)</label>
+                      <select
+                        value={gridSettings.snapSize}
+                        onChange={(e) => setGridSettings({ ...gridSettings, snapSize: parseInt(e.target.value) })}
+                        className="form-select"
+                      >
+                        <option value="5">5 cm</option>
+                        <option value="10">10 cm</option>
+                        <option value="20">20 cm</option>
+                        <option value="50">50 cm</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bill of Materials list */}
+                <div className="sidebar-section">
+                  <div className="section-title">Lista de Mobiliario ({objects.length})</div>
+                  {objects.length === 0 ? (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'center', padding: '10px' }}>
+                      No hay muebles colocados.
+                    </div>
+                  ) : (
+                    <div className="bom-list">
+                      {objects.map((obj) => (
+                        <div
+                          key={obj.id}
+                          className="bom-item"
+                          style={{ cursor: 'pointer', borderColor: selectedId === obj.id ? 'var(--color-primary)' : 'var(--border-thin)' }}
+                          onClick={() => setSelectedId(obj.id)}
+                        >
+                          <div className="bom-item-info">
+                            <span className="bom-item-name">{obj.name}</span>
+                            <span className="bom-item-dims">
+                              {toUnitValue(obj.width)}x{toUnitValue(obj.height)} {unit}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: obj.color, fontWeight: 'bold' }}>
+                            {obj.type.toUpperCase()}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Keyboard Shortcuts guide */}
+                <div className="sidebar-section">
+                  <div className="section-title">Atajos de Teclado</div>
+                  <div className="keyboard-shortcuts-list">
+                    <div className="shortcut-row">
+                      <span>Mover item</span>
+                      <span className="shortcut-key">↑ ↓ ← →</span>
+                    </div>
+                    <div className="shortcut-row">
+                      <span>Mover rápido (10cm)</span>
+                      <span className="shortcut-key">Shift + Flechas</span>
+                    </div>
+                    <div className="shortcut-row">
+                      <span>Eliminar item</span>
+                      <span className="shortcut-key">Supr / Backspace</span>
+                    </div>
+                    <div className="shortcut-row">
+                      <span>Deseleccionar</span>
+                      <span className="shortcut-key">Esc</span>
+                    </div>
+                    <div className="shortcut-row">
+                      <span>Deshacer / Rehacer</span>
+                      <span className="shortcut-key">Ctrl+Z / Ctrl+Y</span>
+                    </div>
+                    <div className="shortcut-row">
+                      <span>Duplicar item</span>
+                      <span className="shortcut-key">Ctrl+D</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>

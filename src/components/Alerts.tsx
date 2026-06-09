@@ -3,7 +3,7 @@ import { AlertCircle, CheckCircle, Info, X } from 'lucide-react';
 
 export interface ToastMessage {
   id: string;
-  type: 'success' | 'error' | 'info';
+  type: 'success' | 'error' | 'info' | 'warning';
   text: string;
 }
 
@@ -58,6 +58,8 @@ const ToastItem: React.FC<{ toast: ToastMessage; removeToast: (id: string) => vo
         return <CheckCircle size={18} style={{ color: 'var(--color-success)' }} />;
       case 'error':
         return <AlertCircle size={18} style={{ color: 'var(--color-accent)' }} />;
+      case 'warning':
+        return <AlertCircle size={18} style={{ color: '#fbbf24' }} />;
       case 'info':
       default:
         return <Info size={18} style={{ color: 'var(--color-secondary)' }} />;
@@ -70,6 +72,8 @@ const ToastItem: React.FC<{ toast: ToastMessage; removeToast: (id: string) => vo
         return 'var(--color-success)';
       case 'error':
         return 'var(--color-accent)';
+      case 'warning':
+        return '#fbbf24';
       case 'info':
       default:
         return 'var(--color-secondary)';

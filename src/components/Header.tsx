@@ -9,7 +9,7 @@ import {
   Image as ImageIcon,
   Trash2,
   Maximize,
-  Keyboard
+  Keyboard,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -26,6 +26,8 @@ interface HeaderProps {
   exportSVG: () => void;
   exportPNG: () => void;
   onShowShortcuts: () => void;
+  onOptimizeLayout?: () => void;
+  isOptimizing?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -42,6 +44,8 @@ export const Header: React.FC<HeaderProps> = ({
   exportSVG,
   exportPNG,
   onShowShortcuts,
+  onOptimizeLayout: _onOptimizeLayout,
+  isOptimizing: _isOptimizing,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +118,19 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right: Export & Import actions */}
       <div className="toolbar-group">
+        {/* Auto-Acomodar layout optimizer button — temporarily hidden; see optimizer tab in right sidebar */}
+        {/* {onOptimizeLayout && (
+          <button
+            className="btn-premium-optimizer-header"
+            onClick={onOptimizeLayout}
+            disabled={isOptimizing}
+            title="Auto-acomodar la distribución de muebles en base a reglas de espacio, flujo e iluminación natural."
+          >
+            <Sparkles size={14} />
+            <span className="btn-text">{isOptimizing ? 'Acomodando...' : 'Auto-Acomodar'}</span>
+          </button>
+        )} */}
+
         <a
           href="https://markdify.tech/"
           target="_blank"

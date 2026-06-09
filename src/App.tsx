@@ -7,6 +7,7 @@ import { ShortcutsModal } from './components/ShortcutsModal';
 import type { ToastMessage, ModalConfig } from './components/Alerts';
 import { ChevronLeft, ChevronRight, Copy, Clipboard, Trash2, Plus, Palette, Edit3 } from 'lucide-react';
 import type { RoomObject, RoomSettings, ObjectType, EditorState, GridSettings, Unit, Point } from './types';
+import { optimizeLayout } from './utils/layoutOptimizer';
 
 // Predefined starting layout for demonstration
 const INITIAL_ROOM_SETTINGS: RoomSettings = {
@@ -141,6 +142,13 @@ export const App: React.FC = () => {
     setSelectedIds(id ? [id] : []);
   };
   
+  // Premium Layout Optimizer states
+  const [showCirculationPaths, setShowCirculationPaths] = useState(false);
+  const [showLightHeatmap, setShowLightHeatmap] = useState(false);
+  const [orientation, setOrientation] = useState<'N' | 'S' | 'E' | 'W'>('N');
+  const [optimizationProfile, setOptimizationProfile] = useState<'space' | 'sleep' | 'work'>('space');
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  
   // Collapsible Sidebars states
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
@@ -187,7 +195,7 @@ export const App: React.FC = () => {
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const addToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
+  const addToast = (text: string, type: 'success' | 'error' | 'info' | 'warning' = 'success') => {
     setToasts((prev) => [...prev, { id: `toast-${Date.now()}-${Math.random()}`, type, text }]);
   };
 
@@ -981,6 +989,79 @@ export const App: React.FC = () => {
     image.src = blobURL;
   };
 
+  // Premium Auto-Arrange Layout Transition
+  const animateLayoutTransition = (targetObjects: RoomObject[]) => {
+    const duration = 650; // Smooth 650ms animation
+    const startTime = performance.now();
+    const startObjects = JSON.parse(JSON.stringify(objects)) as RoomObject[];
+    
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, elapsed / duration);
+      
+      // easeInOutCubic curve
+      const ease = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      
+      const nextObjects = startObjects.map((startObj) => {
+        const targetObj = targetObjects.find((t) => t.id === startObj.id);
+        if (!targetObj) return startObj;
+        
+        const x = startObj.x + (targetObj.x - startObj.x) * ease;
+        const y = startObj.y + (targetObj.y - startObj.y) * ease;
+        
+        // Shortest angular rotation path interpolation
+        const startRot = startObj.rotation;
+        const targetRot = targetObj.rotation;
+        let diff = ((targetRot - startRot + 180) % 360 + 360) % 360 - 180;
+        const rotation = (startRot + diff * ease + 360) % 360;
+        
+        return {
+          ...startObj,
+          x,
+          y,
+          rotation,
+        };
+      });
+      
+      setObjects(nextObjects);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // Snap to clean targeted values to finalize
+        setObjects(targetObjects);
+        commitToHistory(roomSettings, targetObjects);
+        setIsOptimizing(false);
+        addToast('¡Habitación auto-acomodada con éxito!', 'success');
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  };
+
+  const handleOptimizeLayout = () => {
+    const movableObjects = objects.filter((o) => o.type !== 'door' && o.type !== 'window' && o.type !== 'stairs' && o.type !== 'text');
+    if (movableObjects.length === 0) {
+      addToast('Agrega muebles (como Cama, Armario o Escritorio) desde la librería izquierda para poder auto-acomodar.', 'warning');
+      return;
+    }
+    setIsOptimizing(true);
+    addToast('Calculando distribución espacial óptima...', 'info');
+    
+    // Defer execution to render loading state
+    setTimeout(() => {
+      try {
+        const optimized = optimizeLayout(objects, roomSettings, optimizationProfile, orientation);
+        animateLayoutTransition(optimized);
+      } catch (err) {
+        setIsOptimizing(false);
+        addToast('Error al procesar la distribución', 'error');
+      }
+    }, 150);
+  };
+
   const canUndo = historyIndex > 0;
   const canRedo = historyIndex < history.length - 1;
 
@@ -1001,6 +1082,8 @@ export const App: React.FC = () => {
         exportSVG={exportSVG}
         exportPNG={exportPNG}
         onShowShortcuts={() => setShowShortcuts(true)}
+        onOptimizeLayout={handleOptimizeLayout}
+        isOptimizing={isOptimizing}
       />
 
       {/* Main workspaces layout */}
@@ -1075,6 +1158,10 @@ export const App: React.FC = () => {
             });
           }}
           onShowShortcuts={() => setShowShortcuts(true)}
+          showCirculationPaths={showCirculationPaths}
+          showLightHeatmap={showLightHeatmap}
+          orientation={orientation}
+          setOrientation={setOrientation}
         />
 
         {/* Right toggle button */}
@@ -1122,6 +1209,16 @@ export const App: React.FC = () => {
           gridSettings={gridSettings}
           setGridSettings={setGridSettings}
           isOpen={rightSidebarOpen}
+          showCirculationPaths={showCirculationPaths}
+          setShowCirculationPaths={setShowCirculationPaths}
+          showLightHeatmap={showLightHeatmap}
+          setShowLightHeatmap={setShowLightHeatmap}
+          orientation={orientation}
+          setOrientation={setOrientation}
+          optimizationProfile={optimizationProfile}
+          setOptimizationProfile={setOptimizationProfile}
+          onOptimizeLayout={handleOptimizeLayout}
+          isOptimizing={isOptimizing}
         />
       </div>
 
