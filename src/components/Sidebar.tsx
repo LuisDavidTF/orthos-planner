@@ -743,6 +743,10 @@ export const RightSidebar: React.FC<Omit<SidebarProps, 'addObject' | 'setRoomSet
                   <span>Deshacer / Rehacer</span>
                   <span className="shortcut-key">Ctrl+Z / Ctrl+Y</span>
                 </div>
+                <div className="shortcut-row">
+                  <span>Duplicar item</span>
+                  <span className="shortcut-key">Ctrl+D</span>
+                </div>
               </div>
             </div>
           </>

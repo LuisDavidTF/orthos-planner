@@ -455,6 +455,24 @@ export const App: React.FC = () => {
     addToast(`Duplicado: ${obj.name}`, 'success');
   };
 
+  // Keyboard shortcut binding for Duplicate (Ctrl + D)
+  useEffect(() => {
+    const handleDuplicateKey = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return;
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        if (e.key === 'd' || e.key === 'D') {
+          if (selectedId) {
+            e.preventDefault();
+            duplicateObject(selectedId);
+          }
+        }
+      }
+    };
+    window.addEventListener('keydown', handleDuplicateKey);
+    return () => window.removeEventListener('keydown', handleDuplicateKey);
+  }, [selectedId, duplicateObject]);
+
   // Export JSON
   const exportJSON = () => {
     const dataStr = JSON.stringify({ roomSettings, objects }, null, 2);
